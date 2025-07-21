@@ -1,34 +1,54 @@
+// src/assets/Pages/Presentacion.jsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
 
 export default function Presentacion() {
   const navigate = useNavigate();
+  const { search } = useLocation();
+  // Recogemos la sesión de la query (puedes leer login?sesion=1.1 si lo usas así)
+  const sesion = new URLSearchParams(search).get('sesion') || '';
+
   const [nombre, setNombre] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [experiencia, setExperiencia] = useState('');
   const [rol, setRol] = useState('');
   const [email, setEmail] = useState('');
 
-  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.toString().trim());
+  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v =>
+    v.trim()
+  );
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
-    // Insert en lugar de upsert para no disparar UPDATE bajo RLS
-    const { error } = await supabase
+    // intentamos upsert por email (columna única)
+    const { data, error } = await supabase
       .from('experts')
-      .insert([{ nombre, empresa, experiencia, rol, email }]);
+      .upsert(
+        [
+          {
+            nombre,
+            empresa,
+            experiencia: Number(experiencia),
+            rol,
+            email,
+          },
+        ],
+        { onConflict: ['email'] }
+      );
 
-    if (error) {
+    // ignorar “duplicate key” si ya existe (código Postgres 23505)
+    if (error && error.code !== '23505') {
       console.error('Error guardando experto:', error);
-      alert(`Error al guardar: ${error.message}`);
+      alert('Hubo un error al guardar. Revisa la consola.');
       return;
     }
 
-    // Guardar correo y continuar al login
+    // guardamos en localStorage para las sesiones posteriores
     localStorage.setItem('expertEmail', email);
-    navigate('/login');
+    // navegamos forzosamente al login de la sesión (ox: /login?sesion=1.1)
+    navigate(`/login?sesion=${sesion}`, { replace: true });
   };
 
   return (
@@ -39,20 +59,16 @@ export default function Presentacion() {
 
         <input
           style={styles.input}
-          type="text"
           placeholder="Nombre completo"
           value={nombre}
           onChange={e => setNombre(e.target.value)}
         />
-
         <input
           style={styles.input}
-          type="text"
           placeholder="Empresa"
           value={empresa}
           onChange={e => setEmpresa(e.target.value)}
         />
-
         <input
           style={styles.input}
           type="number"
@@ -60,15 +76,12 @@ export default function Presentacion() {
           value={experiencia}
           onChange={e => setExperiencia(e.target.value)}
         />
-
         <input
           style={styles.input}
-          type="text"
           placeholder="Rol"
           value={rol}
           onChange={e => setRol(e.target.value)}
         />
-
         <input
           style={styles.input}
           type="email"
@@ -78,7 +91,10 @@ export default function Presentacion() {
         />
 
         <button
-          style={{ ...styles.button, opacity: canSubmit ? 1 : 0.5 }}
+          style={{
+            ...styles.button,
+            opacity: canSubmit ? 1 : 0.5,
+          }}
           disabled={!canSubmit}
           onClick={handleSubmit}
         >
@@ -97,7 +113,7 @@ const styles = {
     justifyContent: 'center',
     backgroundImage: 'url("/proyecto.png")',
     backgroundSize: 'cover',
-    fontFamily: "'Poppins', sans-serif"
+    fontFamily: "'Poppins',sans-serif",
   },
   card: {
     background: 'rgba(255,255,255,0.9)',
@@ -106,7 +122,7 @@ const styles = {
     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
     width: '100%',
     maxWidth: '400px',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   input: {
     width: '100%',
@@ -114,7 +130,6 @@ const styles = {
     margin: '8px 0',
     borderRadius: '6px',
     border: '1px solid #ccc',
-    fontSize: '16px'
   },
   button: {
     marginTop: '16px',
@@ -125,6 +140,6 @@ const styles = {
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '16px'
-  }
+    fontSize: '16px',
+  },
 };
