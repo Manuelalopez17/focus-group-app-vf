@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Home() {
   const navigate = useNavigate();
+
+  // Si no hay experto logueado, volvemos a Presentación
+  useEffect(() => {
+    if (!localStorage.getItem('expertEmail')) {
+      navigate('/presentacion', { replace: true });
+    }
+  }, [navigate]);
+
   const sesiones = ['1.1', '1.2', '2.1', '2.2'];
 
   return (
@@ -12,7 +20,11 @@ export default function Home() {
         <p>Selecciona la sesión para comenzar</p>
         <div style={styles.buttons}>
           {sesiones.map(s => (
-            <button key={s} style={styles.button} onClick={() => navigate(`/participante?sesion=${s}`)}>
+            <button
+              key={s}
+              style={styles.button}
+              onClick={() => navigate(`/participante?sesion=${s}`)}
+            >
               Sesión {s}
             </button>
           ))}
@@ -24,12 +36,14 @@ export default function Home() {
 
 const styles = {
   container: {
-    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    backgroundImage: 'url("/proyecto.png")', backgroundSize: 'cover', fontFamily: "'Poppins',sans-serif'"
+    minHeight: '100vh',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    backgroundImage: 'url("/proyecto.png")', backgroundSize: 'cover',
+    fontFamily: "'Poppins', sans-serif'"
   },
   card: {
     background: 'rgba(255,255,255,0.9)', padding: '40px', borderRadius: '12px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px', textAlign: 'center'
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)', textAlign: 'center', width: '100%', maxWidth: '400px'
   },
   buttons: {
     display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginTop: '16px'
