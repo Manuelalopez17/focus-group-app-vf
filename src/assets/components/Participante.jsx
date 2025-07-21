@@ -16,57 +16,45 @@ const etapasProyecto = [
   "Disposición Final"
 ];
 
-// Aquí pon tus arrays reales de riesgos por etapa.
-// De momento solo un ejemplo mínimo para Abastecimiento:
+// Temporal: reemplaza estos con tus riesgos reales por etapa
 const riesgosEjemplo = {
   Abastecimiento: [
     "Ejemplo de riesgo 1 para Abastecimiento",
     "Ejemplo de riesgo 2 para Abastecimiento",
     "Ejemplo de riesgo 3 para Abastecimiento"
-  ],
-  // Diseño: [ "Riesgo X", "Riesgo Y", ... ],
-  // ... y así para las 11 etapas
+  ]
+  // Añade las demás etapas aquí
 };
 
 const Participante = () => {
-  // 1) Leer query params "session" o "sesion"
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const sesionParam = params.get("session") || params.get("sesion") || "";
 
-  // 2) Agrupar por 1.x vs 2.x
-  const tipoSesion = sesionParam.split(".")[0]; // "1" o "2"
+  const tipoSesion = sesionParam.split(".")[0];
   const esSesion1 = tipoSesion === "1";
   const esSesion2 = tipoSesion === "2";
 
-  // Estados de formulario
   const [nombre, setNombre] = useState("");
   const [empresa, setEmpresa] = useState("");
   const [experiencia, setExperiencia] = useState("");
   const [etapa, setEtapa] = useState("");
   const [formularioCompletado, setFormularioCompletado] = useState(false);
-
-  // Paginación de riesgos
   const [paginaActual, setPaginaActual] = useState(1);
-  const riesgosPorPagina = 5;
-
-  // Respuestas almacenadas temporalmente
   const [respuestas, setRespuestas] = useState({});
 
-  // Lista de riesgos de la etapa seleccionada
   const riesgos = riesgosEjemplo[etapa] || [];
+  const riesgosPorPagina = 5;
   const totalPaginas = Math.ceil(riesgos.length / riesgosPorPagina);
   const riesgosPagina = riesgos.slice(
     (paginaActual - 1) * riesgosPorPagina,
     paginaActual * riesgosPorPagina
   );
 
-  // Handler para inputs de sesión 1.x
   const handleRespuesta = (riesgo, campo, valor) => {
     setRespuestas(prev => {
       const nueva = { ...(prev[riesgo] || {}), [campo]: valor };
 
-      // Forzar suma 100% si quieres:
       if (campo === "importancia_impacto") {
         nueva.importancia_frecuencia = 100 - valor;
       }
@@ -81,7 +69,6 @@ const Participante = () => {
         importancia_frecuencia
       } = nueva;
 
-      // Calcular scores cuando estén todos los valores
       if (
         impacto != null &&
         frecuencia != null &&
@@ -90,8 +77,7 @@ const Participante = () => {
       ) {
         nueva.score_base = impacto * frecuencia;
         nueva.score_final = Math.round(
-          (importancia_impacto * impacto + importancia_frecuencia * frecuencia) /
-            100
+          (importancia_impacto * impacto + importancia_frecuencia * frecuencia) / 100
         );
       }
 
@@ -99,7 +85,6 @@ const Participante = () => {
     });
   };
 
-  // Handler para checkboxes de sesión 2.x
   const handleCheckboxEtapas = (riesgo, et) => {
     setRespuestas(prev => {
       const actuales = prev[riesgo]?.etapas_afectadas || [];
@@ -113,21 +98,26 @@ const Participante = () => {
     });
   };
 
-  // Guardar todo en Supabase
   const guardarRespuestas = async () => {
-    for (const [riesgo, datos] of Object.entries(respuestas)) {
-      await supabase.from("respuestas").insert({
-        sesion: sesionParam,
-        etapa,
-        riesgo,
-        nombre,
-        empresa,
-        experiencia,
-        ...datos
-      });
+    try {
+      for (const [riesgo, datos] of Object.entries(respuestas)) {
+        const { error } = await supabase.from("focus-group-db").insert({
+          sesion: sesionParam,
+          etapa,
+          riesgo,
+          nombre,
+          empresa,
+          experiencia: parseInt(experiencia),
+          ...datos
+        });
+        if (error) throw error;
+      }
+      alert("Respuestas enviadas exitosamente.");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al guardar en Supabase:", error);
+      alert("Hubo un error al guardar las respuestas. Intenta nuevamente.");
     }
-    alert("Respuestas enviadas exitosamente.");
-    window.location.reload();
   };
 
   return (
@@ -175,10 +165,7 @@ const Participante = () => {
               value={experiencia}
               onChange={e => setExperiencia(e.target.value)}
             /><br />
-            <select
-              value={etapa}
-              onChange={e => setEtapa(e.target.value)}
-            >
+            <select value={etapa} onChange={e => setEtapa(e.target.value)}>
               <option value="">Seleccione la etapa</option>
               {etapasProyecto.map(e => (
                 <option key={e} value={e}>
@@ -186,9 +173,7 @@ const Participante = () => {
                 </option>
               ))}
             </select><br />
-            <button
-              onClick={() => etapa && setFormularioCompletado(true)}
-            >
+            <button onClick={() => etapa && setFormularioCompletado(true)}>
               Comenzar evaluación
             </button>
           </>
@@ -196,15 +181,12 @@ const Participante = () => {
           <>
             <h2>Riesgos para la etapa: {etapa}</h2>
 
-            {/* Listado y paginación de riesgos */}
             {riesgosPagina.map((riesgo, idx) => (
               <details
                 key={idx}
                 style={{ margin: "15px 0", textAlign: "left" }}
               >
-                <summary>
-                  <strong>{riesgo}</strong>
-                </summary>
+                <summary><strong>{riesgo}</strong></summary>
 
                 {esSesion1 && (
                   <>
@@ -216,11 +198,7 @@ const Participante = () => {
                         max="5"
                         value={respuestas[riesgo]?.impacto || ""}
                         onChange={e =>
-                          handleRespuesta(
-                            riesgo,
-                            "impacto",
-                            Number(e.target.value)
-                          )
+                          handleRespuesta(riesgo, "impacto", Number(e.target.value))
                         }
                       />
                     </label><br />
@@ -232,11 +210,7 @@ const Participante = () => {
                         max="5"
                         value={respuestas[riesgo]?.frecuencia || ""}
                         onChange={e =>
-                          handleRespuesta(
-                            riesgo,
-                            "frecuencia",
-                            Number(e.target.value)
-                          )
+                          handleRespuesta(riesgo, "frecuencia", Number(e.target.value))
                         }
                       />
                     </label><br />
@@ -246,11 +220,7 @@ const Participante = () => {
                         type="number"
                         value={respuestas[riesgo]?.importancia_impacto || ""}
                         onChange={e =>
-                          handleRespuesta(
-                            riesgo,
-                            "importancia_impacto",
-                            Number(e.target.value)
-                          )
+                          handleRespuesta(riesgo, "importancia_impacto", Number(e.target.value))
                         }
                       />
                     </label><br />
@@ -260,11 +230,7 @@ const Participante = () => {
                         type="number"
                         value={respuestas[riesgo]?.importancia_frecuencia || ""}
                         onChange={e =>
-                          handleRespuesta(
-                            riesgo,
-                            "importancia_frecuencia",
-                            Number(e.target.value)
-                          )
+                          handleRespuesta(riesgo, "importancia_frecuencia", Number(e.target.value))
                         }
                       />
                     </label><br />
@@ -275,20 +241,13 @@ const Participante = () => {
 
                 {esSesion2 && (
                   <>
-                    <p>
-                      ¿En qué etapas se presenta el efecto de este riesgo?
-                    </p>
+                    <p>¿En qué etapas se presenta el efecto de este riesgo?</p>
                     {etapasProyecto.map((et, j) => (
                       <label key={j} style={{ marginRight: "10px" }}>
                         <input
                           type="checkbox"
-                          checked={
-                            respuestas[riesgo]?.etapas_afectadas?.includes(et) ||
-                            false
-                          }
-                          onChange={() =>
-                            handleCheckboxEtapas(riesgo, et)
-                          }
+                          checked={respuestas[riesgo]?.etapas_afectadas?.includes(et) || false}
+                          onChange={() => handleCheckboxEtapas(riesgo, et)}
                         />
                         {et}
                       </label>
@@ -298,7 +257,6 @@ const Participante = () => {
               </details>
             ))}
 
-            {/* Controles de paginación */}
             <div style={{ marginTop: "20px" }}>
               {paginaActual > 1 && (
                 <button onClick={() => setPaginaActual(p => p - 1)}>
