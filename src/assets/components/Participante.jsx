@@ -1,209 +1,202 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import supabase from '../supabaseClient';
 
-function Participante() {
+const Participante = () => {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const sesion = searchParams.get('sesion');
-  const [etapa, setEtapa] = useState('');
+  const sesion = new URLSearchParams(location.search).get('sesion');
+
   const [nombre, setNombre] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [experiencia, setExperiencia] = useState('');
-  const [mostrarFormulario, setMostrarFormulario] = useState(true);
-  const [respuestas, setRespuestas] = useState({});
-  const [riesgos, setRiesgos] = useState([]);
+  const [etapa, setEtapa] = useState('');
+  const [mostrarEvaluacion, setMostrarEvaluacion] = useState(false);
 
-  const etapasProyecto = [
-    'Abastecimiento',
-    'Prefactibilidad y Factibilidad',
-    'Planeación',
-    'Contratación y Adquisición',
-    'Diseño',
-    'Fabricación',
-    'Logística y Transporte',
-    'Montaje',
-    'Construcción',
-    'Puesta en Marcha',
-    'Disposición Final'
+  // Riesgos de ejemplo
+  const riesgos = [
+    `Ejemplo de riesgo 1 para ${etapa}`,
+    `Ejemplo de riesgo 2 para ${etapa}`,
+    `Ejemplo de riesgo 3 para ${etapa}`,
   ];
 
-  useEffect(() => {
-    if (etapa) {
-      setRiesgos([
-        `Ejemplo de riesgo 1 para ${etapa}`,
-        `Ejemplo de riesgo 2 para ${etapa}`,
-        `Ejemplo de riesgo 3 para ${etapa}`
-      ]);
-    }
-  }, [etapa]);
+  const [respuestas, setRespuestas] = useState({});
 
-  const handleChange = (riesgo, field, value) => {
-    setRespuestas((prev) => {
-      const nuevo = {
-        ...prev[riesgo],
-        [field]: value
-      };
-      const impacto = parseFloat(nuevo.impacto) || 0;
-      const frecuencia = parseFloat(nuevo.frecuencia) || 0;
-      const impImpacto = parseFloat(nuevo.importancia_impacto) || 0;
-      const impFrecuencia = parseFloat(nuevo.importancia_frecuencia) || 0;
-      const score_base = impacto * frecuencia;
-      const score_final = (impacto * impImpacto + frecuencia * impFrecuencia) / 100;
-      return {
-        ...prev,
-        [riesgo]: {
-          ...nuevo,
-          score_base,
-          score_final
-        }
-      };
-    });
+  const handleChange = (index, field, value) => {
+    const updated = { ...respuestas };
+    if (!updated[index]) updated[index] = {};
+    updated[index][field] = value;
+    setRespuestas(updated);
   };
-
-  const handleSubmit = async () => {
-    for (const riesgo of riesgos) {
-      const r = respuestas[riesgo] || {};
-      await supabase.from('respuestas').insert({
-        sesion,
-        etapa,
-        riesgo,
-        nombre,
-        empresa,
-        experiencia,
-        impacto: r.impacto || 0,
-        frecuencia: r.frecuencia || 0,
-        importancia_impacto: r.importancia_impacto || 0,
-        importancia_frecuencia: r.importancia_frecuencia || 0,
-        score_base: r.score_base || 0,
-        score_final: r.score_final || 0
-      });
-    }
-    alert('Respuestas enviadas con éxito');
-  };
-
-  if (mostrarFormulario) {
-    return (
-      <div
-        style={{
-          backgroundImage: 'url(/proyecto.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px',
-        }}
-      >
-        <div style={{
-          backgroundColor: 'rgba(255,255,255,0.9)',
-          borderRadius: '15px',
-          padding: '30px',
-          maxWidth: '600px',
-          width: '100%',
-          textAlign: 'center',
-        }}>
-          <h2 style={{ fontWeight: 700 }}>P6 – Proyecto Riesgos</h2>
-          <input placeholder="Nombre completo" value={nombre} onChange={(e) => setNombre(e.target.value)} style={inputStyle} />
-          <input placeholder="Empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} style={inputStyle} />
-          <input placeholder="Años de experiencia" value={experiencia} onChange={(e) => setExperiencia(e.target.value)} style={inputStyle} />
-          <select value={etapa} onChange={(e) => setEtapa(e.target.value)} style={inputStyle}>
-            <option value="">Seleccione la etapa</option>
-            {etapasProyecto.map((etapa) => (
-              <option key={etapa} value={etapa}>{etapa}</option>
-            ))}
-          </select>
-          <button onClick={() => setMostrarFormulario(false)} style={buttonStyle}>
-            Comenzar evaluación
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
       style={{
-        backgroundImage: 'url(/proyecto.jpg)',
+        backgroundImage: 'url("/proyecto.jpg")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         minHeight: '100vh',
-        padding: '40px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Poppins', sans-serif",
+        padding: '40px',
+        fontFamily: 'Poppins, sans-serif',
       }}
     >
-      <div style={{
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        borderRadius: '15px',
-        padding: '30px',
-        width: '90%',
-        maxWidth: '800px',
-        textAlign: 'center',
-      }}>
-        <h2>Riesgos para la etapa: {etapa}</h2>
-        {riesgos.map((riesgo, index) => (
-          <details key={index} style={{ marginBottom: '20px', textAlign: 'left' }}>
-            <summary><strong>{riesgo}</strong></summary>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '10px' }}>
-              <label>Impacto (1–5):<br />
-                <input type="number" min="1" max="5" value={respuestas[riesgo]?.impacto || ''} onChange={(e) => handleChange(riesgo, 'impacto', e.target.value)} style={inputBox} />
-              </label>
-              <label>Frecuencia (1–5):<br />
-                <input type="number" min="1" max="5" value={respuestas[riesgo]?.frecuencia || ''} onChange={(e) => handleChange(riesgo, 'frecuencia', e.target.value)} style={inputBox} />
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '10px' }}>
-              <label>% Imp. Impacto (0–100%):<br />
-                <input type="number" min="0" max="100" value={respuestas[riesgo]?.importancia_impacto || ''} onChange={(e) => handleChange(riesgo, 'importancia_impacto', e.target.value)} style={inputBox} />
-              </label>
-              <label>% Imp. Frecuencia (0–100%):<br />
-                <input type="number" min="0" max="100" value={respuestas[riesgo]?.importancia_frecuencia || ''} onChange={(e) => handleChange(riesgo, 'importancia_frecuencia', e.target.value)} style={inputBox} />
-              </label>
-            </div>
-            <p><strong>Score Base:</strong> {respuestas[riesgo]?.score_base || 0}</p>
-            <p><strong>Score Final:</strong> {respuestas[riesgo]?.score_final || 0}</p>
-          </details>
-        ))}
-        <button onClick={handleSubmit} style={buttonStyle}>
-          Enviar respuestas
-        </button>
-      </div>
+      {!mostrarEvaluacion ? (
+        <div
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.85)',
+            padding: '40px',
+            borderRadius: '20px',
+            width: '100%',
+            maxWidth: '600px',
+            textAlign: 'center',
+          }}
+        >
+          <h2 style={{ fontWeight: '700', marginBottom: '20px' }}>P6 – Proyecto Riesgos</h2>
+          <input
+            type="text"
+            placeholder="Nombre completo"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            style={inputStyle}
+          />
+          <input
+            type="text"
+            placeholder="Empresa"
+            value={empresa}
+            onChange={(e) => setEmpresa(e.target.value)}
+            style={inputStyle}
+          />
+          <input
+            type="number"
+            placeholder="Años de experiencia"
+            value={experiencia}
+            onChange={(e) => setExperiencia(e.target.value)}
+            style={inputStyle}
+          />
+          <select value={etapa} onChange={(e) => setEtapa(e.target.value)} style={inputStyle}>
+            <option value="">Seleccione la etapa</option>
+            <option value="Abastecimiento">Abastecimiento</option>
+            <option value="Diseño">Diseño</option>
+            <option value="Construcción">Construcción</option>
+            {/* Agrega más etapas si es necesario */}
+          </select>
+          <button
+            onClick={() => setMostrarEvaluacion(true)}
+            style={buttonStyle}
+          >
+            Comenzar evaluación
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.85)',
+            padding: '40px',
+            borderRadius: '20px',
+            width: '100%',
+            maxWidth: '800px',
+            textAlign: 'center',
+          }}
+        >
+          <h2 style={{ fontWeight: '700', marginBottom: '20px' }}>
+            Riesgos para la etapa: {etapa}
+          </h2>
+
+          {riesgos.map((riesgo, index) => (
+            <details key={index} style={{ marginBottom: '20px', textAlign: 'left' }}>
+              <summary style={{ fontWeight: '600', cursor: 'pointer' }}>{riesgo}</summary>
+              <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <div>
+                    <label>Impacto (1–5):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={respuestas[index]?.impacto || ''}
+                      onChange={(e) => handleChange(index, 'impacto', e.target.value)}
+                      style={inputField}
+                    />
+                  </div>
+                  <div>
+                    <label>Frecuencia (1–5):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={respuestas[index]?.frecuencia || ''}
+                      onChange={(e) => handleChange(index, 'frecuencia', e.target.value)}
+                      style={inputField}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <div>
+                    <label>% Imp. Impacto (0–100%):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={respuestas[index]?.importanciaImpacto || ''}
+                      onChange={(e) => handleChange(index, 'importanciaImpacto', e.target.value)}
+                      style={inputField}
+                    />
+                  </div>
+                  <div>
+                    <label>% Imp. Frecuencia (0–100%):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={respuestas[index]?.importanciaFrecuencia || ''}
+                      onChange={(e) => handleChange(index, 'importanciaFrecuencia', e.target.value)}
+                      style={inputField}
+                    />
+                  </div>
+                </div>
+              </div>
+              <p style={{ marginTop: '10px' }}>
+                Score Base: 0 <br />
+                Score Final: 0
+              </p>
+            </details>
+          ))}
+
+          <button style={buttonStyle}>Enviar respuestas</button>
+        </div>
+      )}
     </div>
   );
-}
-
-const inputStyle = {
-  marginBottom: '15px',
-  padding: '10px',
-  width: '100%',
-  fontSize: '16px',
-  borderRadius: '6px',
-  border: '1px solid #ccc'
 };
 
-const inputBox = {
+const inputStyle = {
+  width: '100%',
+  padding: '10px',
+  marginBottom: '15px',
+  fontSize: '16px',
+  borderRadius: '6px',
+  border: '1px solid #ccc',
+};
+
+const inputField = {
+  width: '200px',
   padding: '8px',
   fontSize: '14px',
-  width: '150px',
-  borderRadius: '5px',
+  borderRadius: '6px',
   border: '1px solid #ccc',
-  marginTop: '5px'
 };
 
 const buttonStyle = {
-  marginTop: '20px',
   backgroundColor: '#007bff',
   color: 'white',
-  padding: '12px 20px',
   border: 'none',
-  borderRadius: '6px',
+  padding: '12px 20px',
   fontSize: '16px',
   fontWeight: '600',
-  cursor: 'pointer'
+  borderRadius: '6px',
+  cursor: 'pointer',
+  marginTop: '20px',
 };
 
 export default Participante;
