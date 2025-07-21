@@ -129,7 +129,7 @@ const Participante = () => {
   return (
     <div
       style={{
-        backgroundImage: "url('/proyecto.png')",
+        backgroundImage: "url('/edificio.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh",
@@ -144,10 +144,10 @@ const Participante = () => {
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.85)",
           padding: "30px",
-          borderRadius: "12px",
-          maxWidth: "900px",
+          borderRadius: "16px",
+          maxWidth: "950px",
           width: "100%",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
           textAlign: "center"
         }}
       >
@@ -210,67 +210,55 @@ const Participante = () => {
         ) : (
           <>
             <h2>Riesgos para la etapa: {etapa}</h2>
+
             {riesgosPagina.map((riesgo, idx) => (
-              <details key={idx} style={{ margin: "15px 0", textAlign: "left" }}>
+              <details
+                key={idx}
+                style={{ margin: "15px 0", textAlign: "left" }}
+              >
                 <summary><strong>{riesgo}</strong></summary>
 
                 {esSesion1 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-                      <label style={{ flex: '1 1 200px' }}>
-                        Impacto (1–5):<br />
+                  <>
+                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '10px' }}>
+                      <label>Impacto (1–5):<br />
                         <input
                           type="number"
                           min="1"
                           max="5"
                           value={respuestas[riesgo]?.impacto || ""}
                           onChange={e => handleRespuesta(riesgo, "impacto", Number(e.target.value))}
-                          style={{ width: '100%', padding: '6px' }}
                         />
                       </label>
-
-                      <label style={{ flex: '1 1 200px' }}>
-                        Frecuencia (1–5):<br />
+                      <label>Frecuencia (1–5):<br />
                         <input
                           type="number"
                           min="1"
                           max="5"
                           value={respuestas[riesgo]?.frecuencia || ""}
                           onChange={e => handleRespuesta(riesgo, "frecuencia", Number(e.target.value))}
-                          style={{ width: '100%', padding: '6px' }}
                         />
                       </label>
-
-                      <label style={{ flex: '1 1 200px' }}>
-                        % Imp. Impacto (0–100%):<br />
+                    </div>
+                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '10px' }}>
+                      <label>% Imp. Impacto (0–100%):<br />
                         <input
                           type="number"
-                          min="0"
-                          max="100"
                           value={respuestas[riesgo]?.importancia_impacto || ""}
                           onChange={e => handleRespuesta(riesgo, "importancia_impacto", Number(e.target.value))}
-                          style={{ width: '100%', padding: '6px' }}
                         />
                       </label>
-
-                      <label style={{ flex: '1 1 200px' }}>
-                        % Imp. Frecuencia (0–100%):<br />
+                      <label>% Imp. Frecuencia (0–100%):<br />
                         <input
                           type="number"
-                          min="0"
-                          max="100"
                           value={respuestas[riesgo]?.importancia_frecuencia || ""}
                           onChange={e => handleRespuesta(riesgo, "importancia_frecuencia", Number(e.target.value))}
-                          style={{ width: '100%', padding: '6px' }}
                         />
                       </label>
                     </div>
-
-                    <div style={{ marginTop: '10px' }}>
-                      <p><strong>Score Base:</strong> {respuestas[riesgo]?.score_base ?? 0}</p>
-                      <p><strong>Score Final:</strong> {respuestas[riesgo]?.score_final ?? 0}</p>
-                    </div>
-                  </div>
+                    <p>Score Base: {respuestas[riesgo]?.score_base ?? 0}</p>
+                    <p>Score Final: {respuestas[riesgo]?.score_final ?? 0}</p>
+                  </>
                 )}
 
                 {esSesion2 && (
@@ -293,13 +281,19 @@ const Participante = () => {
 
             <div style={{ marginTop: "20px" }}>
               {paginaActual > 1 && (
-                <button onClick={() => setPaginaActual(p => p - 1)}>Anterior</button>
+                <button onClick={() => setPaginaActual(p => p - 1)}>
+                  Anterior
+                </button>
               )}
               {paginaActual < totalPaginas && (
-                <button onClick={() => setPaginaActual(p => p + 1)}>Siguiente</button>
+                <button onClick={() => setPaginaActual(p => p + 1)}>
+                  Siguiente
+                </button>
               )}
               {paginaActual === totalPaginas && (
-                <button onClick={guardarRespuestas}>Enviar respuestas</button>
+                <button onClick={guardarRespuestas}>
+                  Enviar respuestas
+                </button>
               )}
             </div>
           </>
@@ -310,4 +304,3 @@ const Participante = () => {
 };
 
 export default Participante;
-
