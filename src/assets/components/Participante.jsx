@@ -16,14 +16,12 @@ const etapasProyecto = [
   "Disposición Final"
 ];
 
-// Temporal: reemplaza estos con tus riesgos reales por etapa
 const riesgosEjemplo = {
   Abastecimiento: [
     "Ejemplo de riesgo 1 para Abastecimiento",
     "Ejemplo de riesgo 2 para Abastecimiento",
     "Ejemplo de riesgo 3 para Abastecimiento"
   ]
-  // Agrega más etapas y riesgos reales aquí
 };
 
 const Participante = () => {
@@ -113,7 +111,7 @@ const Participante = () => {
         });
         if (error) throw error;
       }
-      setEvaluacionFinalizada(true); // ← Muestra pantalla de cierre
+      setEvaluacionFinalizada(true);
     } catch (error) {
       console.error("Error al guardar en Supabase:", error);
       alert("Hubo un error al guardar las respuestas. Intenta nuevamente.");
@@ -136,18 +134,24 @@ const Participante = () => {
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         minHeight: "100vh",
-        padding: "40px",
-        fontFamily: "Arial, sans-serif"
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "Arial, sans-serif",
+        padding: "20px"
       }}
     >
       <div
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          padding: "30px",
-          borderRadius: "12px",
-          maxWidth: "900px",
-          margin: "0 auto",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+          background: "rgba(255, 255, 255, 0.6)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          borderRadius: "16px",
+          padding: "40px",
+          width: "100%",
+          maxWidth: "700px",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+          textAlign: "center"
         }}
       >
         {!formularioCompletado ? (
@@ -179,9 +183,7 @@ const Participante = () => {
             >
               <option value="">Seleccione la etapa</option>
               {etapasProyecto.map(e => (
-                <option key={e} value={e}>
-                  {e}
-                </option>
+                <option key={e} value={e}>{e}</option>
               ))}
             </select>
             <button
@@ -209,55 +211,23 @@ const Participante = () => {
         ) : (
           <>
             <h2>Riesgos para la etapa: {etapa}</h2>
-
             {riesgosPagina.map((riesgo, idx) => (
-              <details
-                key={idx}
-                style={{ margin: "15px 0", textAlign: "left" }}
-              >
+              <details key={idx} style={{ margin: "15px 0", textAlign: "left" }}>
                 <summary><strong>{riesgo}</strong></summary>
 
                 {esSesion1 && (
                   <>
                     <label>Impacto:
-                      <input
-                        type="number"
-                        min="1"
-                        max="5"
-                        value={respuestas[riesgo]?.impacto || ""}
-                        onChange={e =>
-                          handleRespuesta(riesgo, "impacto", Number(e.target.value))
-                        }
-                      />
+                      <input type="number" min="1" max="5" value={respuestas[riesgo]?.impacto || ""} onChange={e => handleRespuesta(riesgo, "impacto", Number(e.target.value))} />
                     </label><br />
                     <label>Frecuencia:
-                      <input
-                        type="number"
-                        min="1"
-                        max="5"
-                        value={respuestas[riesgo]?.frecuencia || ""}
-                        onChange={e =>
-                          handleRespuesta(riesgo, "frecuencia", Number(e.target.value))
-                        }
-                      />
+                      <input type="number" min="1" max="5" value={respuestas[riesgo]?.frecuencia || ""} onChange={e => handleRespuesta(riesgo, "frecuencia", Number(e.target.value))} />
                     </label><br />
                     <label>% Imp. Impacto:
-                      <input
-                        type="number"
-                        value={respuestas[riesgo]?.importancia_impacto || ""}
-                        onChange={e =>
-                          handleRespuesta(riesgo, "importancia_impacto", Number(e.target.value))
-                        }
-                      />
+                      <input type="number" value={respuestas[riesgo]?.importancia_impacto || ""} onChange={e => handleRespuesta(riesgo, "importancia_impacto", Number(e.target.value))} />
                     </label><br />
                     <label>% Imp. Frecuencia:
-                      <input
-                        type="number"
-                        value={respuestas[riesgo]?.importancia_frecuencia || ""}
-                        onChange={e =>
-                          handleRespuesta(riesgo, "importancia_frecuencia", Number(e.target.value))
-                        }
-                      />
+                      <input type="number" value={respuestas[riesgo]?.importancia_frecuencia || ""} onChange={e => handleRespuesta(riesgo, "importancia_frecuencia", Number(e.target.value))} />
                     </label><br />
                     <p>Score Base: {respuestas[riesgo]?.score_base ?? 0}</p>
                     <p>Score Final: {respuestas[riesgo]?.score_final ?? 0}</p>
@@ -269,11 +239,7 @@ const Participante = () => {
                     <p>¿En qué etapas se presenta el efecto de este riesgo?</p>
                     {etapasProyecto.map((et, j) => (
                       <label key={j} style={{ marginRight: "10px" }}>
-                        <input
-                          type="checkbox"
-                          checked={respuestas[riesgo]?.etapas_afectadas?.includes(et) || false}
-                          onChange={() => handleCheckboxEtapas(riesgo, et)}
-                        />
+                        <input type="checkbox" checked={respuestas[riesgo]?.etapas_afectadas?.includes(et) || false} onChange={() => handleCheckboxEtapas(riesgo, et)} />
                         {et}
                       </label>
                     ))}
@@ -284,19 +250,13 @@ const Participante = () => {
 
             <div style={{ marginTop: "20px" }}>
               {paginaActual > 1 && (
-                <button onClick={() => setPaginaActual(p => p - 1)}>
-                  Anterior
-                </button>
+                <button onClick={() => setPaginaActual(p => p - 1)}>Anterior</button>
               )}
               {paginaActual < totalPaginas && (
-                <button onClick={() => setPaginaActual(p => p + 1)}>
-                  Siguiente
-                </button>
+                <button onClick={() => setPaginaActual(p => p + 1)}>Siguiente</button>
               )}
               {paginaActual === totalPaginas && (
-                <button onClick={guardarRespuestas}>
-                  Enviar respuestas
-                </button>
+                <button onClick={guardarRespuestas}>Enviar respuestas</button>
               )}
             </div>
           </>
