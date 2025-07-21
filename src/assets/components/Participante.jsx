@@ -131,7 +131,10 @@ const Participante = () => {
   return (
     <div
       style={{
-        backgroundColor: "#f5f5f5",
+        backgroundImage: 'url("/proyecto.png")',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         minHeight: "100vh",
         padding: "40px",
         fontFamily: "Arial, sans-serif"
@@ -139,7 +142,7 @@ const Participante = () => {
     >
       <div
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
           padding: "30px",
           borderRadius: "12px",
           maxWidth: "900px",
