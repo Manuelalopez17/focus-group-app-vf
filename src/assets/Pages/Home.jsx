@@ -64,7 +64,7 @@ function Home() {
           <option value="2.2">Sesión 2.2</option>
           <option value="3.1">Sesión 3.1</option>
           <option value="3.2">Sesión 3.2</option>
-          <option value="simulacion">Simulación</option>
+          <option value="simulacion">Prestentación</option>
         </select>
         <br />
         <button
