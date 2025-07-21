@@ -16,14 +16,12 @@ const etapasProyecto = [
   "Disposición Final"
 ];
 
-// Temporal: reemplaza estos con tus riesgos reales por etapa
 const riesgosEjemplo = {
   Abastecimiento: [
     "Ejemplo de riesgo 1 para Abastecimiento",
     "Ejemplo de riesgo 2 para Abastecimiento",
     "Ejemplo de riesgo 3 para Abastecimiento"
   ]
-  // Añade las demás etapas aquí
 };
 
 const Participante = () => {
@@ -42,6 +40,7 @@ const Participante = () => {
   const [formularioCompletado, setFormularioCompletado] = useState(false);
   const [paginaActual, setPaginaActual] = useState(1);
   const [respuestas, setRespuestas] = useState({});
+  const [finalizado, setFinalizado] = useState(false);
 
   const riesgos = riesgosEjemplo[etapa] || [];
   const riesgosPorPagina = 5;
@@ -98,6 +97,14 @@ const Participante = () => {
     });
   };
 
+  const validarFormulario = () => {
+    if (!nombre || !empresa || !experiencia || !etapa) {
+      alert("Por favor completa todos los campos antes de continuar.");
+      return;
+    }
+    setFormularioCompletado(true);
+  };
+
   const guardarRespuestas = async () => {
     try {
       for (const [riesgo, datos] of Object.entries(respuestas)) {
@@ -112,8 +119,7 @@ const Participante = () => {
         });
         if (error) throw error;
       }
-      alert("Respuestas enviadas exitosamente.");
-      window.location.reload();
+      setFinalizado(true);
     } catch (error) {
       console.error("Error al guardar en Supabase:", error);
       alert("Hubo un error al guardar las respuestas. Intenta nuevamente.");
@@ -138,7 +144,7 @@ const Participante = () => {
     >
       <div
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
           padding: "30px",
           borderRadius: "15px",
           width: "80%",
@@ -146,7 +152,12 @@ const Participante = () => {
           textAlign: "center"
         }}
       >
-        {!formularioCompletado ? (
+        {finalizado ? (
+          <div>
+            <h2>✅ Gracias por participar</h2>
+            <p>Tus respuestas han sido registradas correctamente.</p>
+          </div>
+        ) : !formularioCompletado ? (
           <>
             <h2>P6 – Proyecto Riesgos</h2>
             <input
@@ -173,7 +184,7 @@ const Participante = () => {
                 </option>
               ))}
             </select><br />
-            <button onClick={() => etapa && setFormularioCompletado(true)}>
+            <button onClick={validarFormulario}>
               Comenzar evaluación
             </button>
           </>
