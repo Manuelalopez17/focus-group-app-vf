@@ -1,3 +1,4 @@
+// src/assets/components/Participante.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
@@ -8,12 +9,13 @@ export default function Participante() {
   const sesion = new URLSearchParams(search).get('sesion');
   const expertEmail = localStorage.getItem('expertEmail');
 
-  // Redirige si no hay correo
+  // Si no hay email en localStorage, forzamos volver al login de esa sesión
   useEffect(() => {
-    if (!expertEmail) navigate('/login', { replace: true });
-  }, [expertEmail, navigate]);
+    if (!expertEmail) {
+      navigate(`/login?sesion=${sesion}`, { replace: true });
+    }
+  }, [expertEmail, navigate, sesion]);
 
-  const sesionesDisponibles = ['1.1', '1.2', '2.1', '2.2'];
   const etapasProyecto = [
     'Abastecimiento',
     'Prefactibilidad y Factibilidad',
@@ -33,49 +35,89 @@ export default function Participante() {
   const [riesgos, setRiesgos] = useState([]);
   const [respuestas, setRespuestas] = useState({});
 
-  // Carga los riesgos según etapa
+  // Carga los riesgos según la etapa
   useEffect(() => {
     if (!etapa) return;
     const mapRiesgos = {
-      /* tu mapa de riesgos igual que antes */
       Abastecimiento: [
         'Demora en entrega de materiales por parte del proveedor',
         'Recepción de materiales con especificaciones incorrectas',
-        'Falta de control de calidad en los insumos adquiridos'
+        'Falta de control de calidad en los insumos adquiridos',
       ],
-      /* … resto de etapas … */
+      'Prefactibilidad y Factibilidad': [
+        'Falta de análisis adecuado de viabilidad técnica',
+        'Supuestos económicos erróneos en la factibilidad financiera',
+        'Escasa participación de actores clave en etapa temprana',
+      ],
+      Planeación: [
+        'Errores en la estimación de recursos y tiempos',
+        'No inclusión de contingencias en la planificación',
+        'Cambios constantes en el alcance del proyecto',
+      ],
+      'Contratación y Adquisición': [
+        'Contratación de proveedores sin experiencia en construcción industrializada',
+        'Inadecuada definición de términos contractuales',
+        'Demoras en procesos administrativos de adquisición',
+      ],
+      Diseño: [
+        'Diseño no compatible con procesos industrializados',
+        'Errores en la integración de disciplinas de diseño',
+        'Ausencia de revisión y validación cruzada',
+      ],
+      Fabricación: [
+        'Defectos de fabricación en componentes modulares',
+        'Interrupciones en la cadena de producción',
+        'Falta de control en tolerancias de fabricación',
+      ],
+      'Logística y Transporte': [
+        'Retrasos en la entrega por dificultades logísticas',
+        'Daños en módulos durante el transporte',
+        'Problemas de acceso al sitio de construcción',
+      ],
+      Montaje: [
+        'Descoordinación entre equipos de montaje y logística',
+        'Errores en la secuencia de montaje',
+        'Falta de capacitación en ensamblaje de componentes',
+      ],
+      Construcción: [
+        'Condiciones climáticas adversas afectan avances',
+        'Incompatibilidad entre componentes industrializados y tradicionales',
+        'Riesgos laborales por manipulación de módulos',
+      ],
+      'Puesta en Marcha': [
+        'Fallos en las pruebas de sistemas instalados',
+        'No conformidad con normativas técnicas',
+        'Demoras en aprobaciones regulatorias finales',
+      ],
+      'Disposición Final': [
+        'Falta de planificación para reciclaje de componentes',
+        'Altos costos de disposición de residuos',
+        'Desconocimiento de normativas ambientales aplicables',
+      ],
     };
     setRiesgos(mapRiesgos[etapa] || []);
   }, [etapa]);
 
-  // Validación para poder iniciar
-  const canStart = () => sesionesDisponibles.includes(sesion) && etapa;
+  // Validación para mostrar el botón de "Comenzar evaluación"
+  const canStart = etapa !== '' && typeof sesion === 'string';
 
   const handleStart = () => {
-    if (canStart()) setMostrarFormulario(false);
+    if (canStart) setMostrarFormulario(false);
   };
 
-  // Maneja cambios y recalcula scores
+  // Manejador de inputs y cálculo de scores
   const handleChange = (idx, field, value) => {
     setRespuestas(prev => {
       const r = { ...(prev[idx] || {}) };
 
-      // Campos numéricos
       if (field === 'impacto' || field === 'frecuencia') {
         r[field] = Number(value);
-      }
-      // Auto‑sumar porcentajes
-      else if (field === 'importancia_impacto') {
+      } else if (field === 'importancia_impacto') {
         const imp = Number(value);
         r.importancia_impacto = imp;
         r.importancia_frecuencia = 100 - imp;
-      } else if (field === 'importancia_frecuencia') {
-        const frec = Number(value);
-        r.importancia_frecuencia = frec;
-        r.importancia_impacto = 100 - frec;
       }
 
-      // Recalcular scores para 1.x
       if (['1.1', '1.2'].includes(sesion)) {
         const imp = r.impacto || 0;
         const frec = r.frecuencia || 0;
@@ -91,7 +133,7 @@ export default function Participante() {
     });
   };
 
-  // Maneja checkboxes para 2.x
+  // Manejador de checkboxes (sesiones 2.x)
   const handleCheckbox = (idx, etapaName) => {
     setRespuestas(prev => {
       const r = { ...(prev[idx] || {}) };
@@ -103,7 +145,7 @@ export default function Participante() {
     });
   };
 
-  // Envía el payload a Supabase
+  // Envío final de todas las respuestas
   const handleSubmit = async () => {
     for (let i = 0; i < riesgos.length; i++) {
       const resp = respuestas[i] || {};
@@ -113,17 +155,16 @@ export default function Participante() {
         etapa,
         riesgo: riesgos[i],
       };
-      const detalle =
-        ['1.1', '1.2'].includes(sesion)
-          ? {
-              impacto: resp.impacto,
-              frecuencia: resp.frecuencia,
-              importancia_impacto: resp.importancia_impacto,
-              importancia_frecuencia: resp.importancia_frecuencia,
-              score_base: resp.score_base,
-              score_final: resp.score_final,
-            }
-          : { etapas_afectadas: resp.etapas_afectadas };
+      const detalle = ['1.1', '1.2'].includes(sesion)
+        ? {
+            impacto: resp.impacto,
+            frecuencia: resp.frecuencia,
+            importancia_impacto: resp.importancia_impacto,
+            importancia_frecuencia: resp.importancia_frecuencia,
+            score_base: resp.score_base,
+            score_final: resp.score_final,
+          }
+        : { etapas_afectadas: resp.etapas_afectadas };
 
       const { error } = await supabase
         .from('focus-group-db')
@@ -133,9 +174,10 @@ export default function Participante() {
         return;
       }
     }
+
     alert('Respuestas enviadas correctamente');
     setRespuestas({});
-    setMostrarFormulario(true);
+    navigate('/home', { replace: true });
   };
 
   return (
@@ -151,17 +193,12 @@ export default function Participante() {
             >
               <option value="">Seleccione etapa</option>
               {etapasProyecto.map(ep => (
-                <option key={ep} value={ep}>
-                  {ep}
-                </option>
+                <option key={ep} value={ep}>{ep}</option>
               ))}
             </select>
             <button
-              style={{
-                ...styles.button,
-                opacity: canStart() ? 1 : 0.5
-              }}
-              disabled={!canStart()}
+              style={{ ...styles.button, opacity: canStart ? 1 : 0.5 }}
+              disabled={!canStart}
               onClick={handleStart}
             >
               Comenzar evaluación
@@ -169,73 +206,58 @@ export default function Participante() {
           </>
         ) : (
           <>
-            <h2>
-              Sesión {sesion} – Etapa: {etapa}
-            </h2>
+            <h2>Sesión {sesion} – Etapa: {etapa}</h2>
             <p style={styles.note}>
-              {['1.1', '1.2'].includes(sesion)
+              {['1.1','1.2'].includes(sesion)
                 ? 'Califica Impacto, Frecuencia y % de Impacto'
                 : 'Selecciona las etapas afectadas'}
             </p>
 
             {riesgos.map((r, i) => (
-              <details key={i} style={styles.detail}>
-                <summary>{r}</summary>
+              <div key={i} style={styles.riskContainer}>
+                <p style={styles.riskTitle}><strong>{r}</strong></p>
 
-                {['1.1', '1.2'].includes(sesion) ? (
+                {['1.1','1.2'].includes(sesion) ? (
                   <div style={styles.grid2}>
                     <div>
-                      <label>Impacto (1–5):</label>
+                      <label>Impacto (1–5):</label><br/>
                       <input
-                        type="number"
-                        min="1"
-                        max="5"
-                        value={respuestas[i]?.impacto || ''}
-                        onChange={e =>
-                          handleChange(i, 'impacto', e.target.value)
-                        }
+                        type="number" min="1" max="5"
+                        value={respuestas[i]?.impacto||''}
+                        onChange={e=>handleChange(i,'impacto',e.target.value)}
                       />
                     </div>
                     <div>
-                      <label>Frecuencia (1–5):</label>
+                      <label>Frecuencia (1–5):</label><br/>
                       <input
-                        type="number"
-                        min="1"
-                        max="5"
-                        value={respuestas[i]?.frecuencia || ''}
-                        onChange={e =>
-                          handleChange(i, 'frecuencia', e.target.value)
-                        }
+                        type="number" min="1" max="5"
+                        value={respuestas[i]?.frecuencia||''}
+                        onChange={e=>handleChange(i,'frecuencia',e.target.value)}
                       />
                     </div>
                     <div>
-                      <label>% Imp. Impacto:</label>
+                      <label>% Imp. Impacto:</label><br/>
                       <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={respuestas[i]?.importancia_impacto || ''}
-                        onChange={e =>
-                          handleChange(i, 'importancia_impacto', e.target.value)
-                        }
+                        type="number" min="0" max="100"
+                        value={respuestas[i]?.importancia_impacto||''}
+                        onChange={e=>handleChange(i,'importancia_impacto',e.target.value)}
                       />
                     </div>
                   </div>
                 ) : (
                   <div style={styles.wrap}>
-                    {etapasProyecto.map(ep => (
+                    {etapasProyecto.map(ep=>(
                       <label key={ep} style={styles.checkboxLabel}>
                         <input
                           type="checkbox"
-                          checked={respuestas[i]?.etapas_afectadas?.includes(ep) || false}
-                          onChange={() => handleCheckbox(i, ep)}
-                        />{' '}
-                        {ep}
+                          checked={respuestas[i]?.etapas_afectadas?.includes(ep)||false}
+                          onChange={()=>handleCheckbox(i,ep)}
+                        />{' '}{ep}
                       </label>
                     ))}
                   </div>
                 )}
-              </details>
+              </div>
             ))}
 
             <button style={styles.button} onClick={handleSubmit}>
@@ -292,21 +314,24 @@ const styles = {
     fontStyle: 'italic',
     marginBottom: '20px'
   },
-  detail: {
+  riskContainer: {
     textAlign: 'left',
     marginBottom: '20px'
+  },
+  riskTitle: {
+    marginBottom: '10px'
   },
   grid2: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr 1fr',
     gap: '20px',
-    marginTop: '10px'
+    marginBottom: '10px'
   },
   wrap: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '10px',
-    marginTop: '10px',
+    marginBottom: '10px',
     justifyContent: 'center'
   },
   checkboxLabel: {
