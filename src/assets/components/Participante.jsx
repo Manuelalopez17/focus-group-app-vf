@@ -129,28 +129,25 @@ const Participante = () => {
   return (
     <div
       style={{
-        backgroundImage: 'url("/proyecto.png")',
+        backgroundImage: "url('/proyecto.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
         minHeight: "100vh",
+        padding: "40px",
+        fontFamily: "Arial, sans-serif",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "Arial, sans-serif",
-        padding: "20px"
+        justifyContent: "center"
       }}
     >
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.6)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          borderRadius: "16px",
-          padding: "40px",
+          backgroundColor: "rgba(255, 255, 255, 0.85)",
+          padding: "30px",
+          borderRadius: "12px",
+          maxWidth: "900px",
           width: "100%",
-          maxWidth: "700px",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
           textAlign: "center"
         }}
       >
@@ -183,7 +180,9 @@ const Participante = () => {
             >
               <option value="">Seleccione la etapa</option>
               {etapasProyecto.map(e => (
-                <option key={e} value={e}>{e}</option>
+                <option key={e} value={e}>
+                  {e}
+                </option>
               ))}
             </select>
             <button
@@ -216,22 +215,62 @@ const Participante = () => {
                 <summary><strong>{riesgo}</strong></summary>
 
                 {esSesion1 && (
-                  <>
-                    <label>Impacto:
-                      <input type="number" min="1" max="5" value={respuestas[riesgo]?.impacto || ""} onChange={e => handleRespuesta(riesgo, "impacto", Number(e.target.value))} />
-                    </label><br />
-                    <label>Frecuencia:
-                      <input type="number" min="1" max="5" value={respuestas[riesgo]?.frecuencia || ""} onChange={e => handleRespuesta(riesgo, "frecuencia", Number(e.target.value))} />
-                    </label><br />
-                    <label>% Imp. Impacto:
-                      <input type="number" value={respuestas[riesgo]?.importancia_impacto || ""} onChange={e => handleRespuesta(riesgo, "importancia_impacto", Number(e.target.value))} />
-                    </label><br />
-                    <label>% Imp. Frecuencia:
-                      <input type="number" value={respuestas[riesgo]?.importancia_frecuencia || ""} onChange={e => handleRespuesta(riesgo, "importancia_frecuencia", Number(e.target.value))} />
-                    </label><br />
-                    <p>Score Base: {respuestas[riesgo]?.score_base ?? 0}</p>
-                    <p>Score Final: {respuestas[riesgo]?.score_final ?? 0}</p>
-                  </>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                      <label style={{ flex: '1 1 200px' }}>
+                        Impacto (1–5):<br />
+                        <input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={respuestas[riesgo]?.impacto || ""}
+                          onChange={e => handleRespuesta(riesgo, "impacto", Number(e.target.value))}
+                          style={{ width: '100%', padding: '6px' }}
+                        />
+                      </label>
+
+                      <label style={{ flex: '1 1 200px' }}>
+                        Frecuencia (1–5):<br />
+                        <input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={respuestas[riesgo]?.frecuencia || ""}
+                          onChange={e => handleRespuesta(riesgo, "frecuencia", Number(e.target.value))}
+                          style={{ width: '100%', padding: '6px' }}
+                        />
+                      </label>
+
+                      <label style={{ flex: '1 1 200px' }}>
+                        % Imp. Impacto (0–100%):<br />
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={respuestas[riesgo]?.importancia_impacto || ""}
+                          onChange={e => handleRespuesta(riesgo, "importancia_impacto", Number(e.target.value))}
+                          style={{ width: '100%', padding: '6px' }}
+                        />
+                      </label>
+
+                      <label style={{ flex: '1 1 200px' }}>
+                        % Imp. Frecuencia (0–100%):<br />
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={respuestas[riesgo]?.importancia_frecuencia || ""}
+                          onChange={e => handleRespuesta(riesgo, "importancia_frecuencia", Number(e.target.value))}
+                          style={{ width: '100%', padding: '6px' }}
+                        />
+                      </label>
+                    </div>
+
+                    <div style={{ marginTop: '10px' }}>
+                      <p><strong>Score Base:</strong> {respuestas[riesgo]?.score_base ?? 0}</p>
+                      <p><strong>Score Final:</strong> {respuestas[riesgo]?.score_final ?? 0}</p>
+                    </div>
+                  </div>
                 )}
 
                 {esSesion2 && (
@@ -239,7 +278,11 @@ const Participante = () => {
                     <p>¿En qué etapas se presenta el efecto de este riesgo?</p>
                     {etapasProyecto.map((et, j) => (
                       <label key={j} style={{ marginRight: "10px" }}>
-                        <input type="checkbox" checked={respuestas[riesgo]?.etapas_afectadas?.includes(et) || false} onChange={() => handleCheckboxEtapas(riesgo, et)} />
+                        <input
+                          type="checkbox"
+                          checked={respuestas[riesgo]?.etapas_afectadas?.includes(et) || false}
+                          onChange={() => handleCheckboxEtapas(riesgo, et)}
+                        />
                         {et}
                       </label>
                     ))}
@@ -267,3 +310,4 @@ const Participante = () => {
 };
 
 export default Participante;
+
