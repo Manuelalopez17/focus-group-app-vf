@@ -1,19 +1,21 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './assets/Pages/Home';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Presentacion from './Pages/Presentacion';
+import Login from './Pages/Login';
+import Home from './Pages/Home';
 import Participante from './assets/components/Participante';
 
-function App() {
+export default function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Navigate to="/presentacion" />} />
+        <Route path="/presentacion" element={<Presentacion />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/participante" element={<Participante />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
-
-export default App;
-
 
