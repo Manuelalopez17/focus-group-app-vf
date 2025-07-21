@@ -114,7 +114,17 @@ function Participante() {
             <input type="number" placeholder="Años de experiencia" value={experiencia} onChange={e => setExperiencia(e.target.value)} style={styles.input} />
             <select value={etapa} onChange={e => setEtapa(e.target.value)} style={styles.input}>
               <option value="">Seleccione la etapa</option>
-              {/* opciones de etapas */}
+              <option value="Abastecimiento">Abastecimiento</option>
+              <option value="Prefactibilidad y Factibilidad">Prefactibilidad y Factibilidad</option>
+              <option value="Planeación">Planeación</option>
+              <option value="Contratación y Adquisición">Contratación y Adquisición</option>
+              <option value="Diseño">Diseño</option>
+              <option value="Fabricación">Fabricación</option>
+              <option value="Logística y Transporte">Logística y Transporte</option>
+              <option value="Montaje">Montaje</option>
+              <option value="Construcción">Construcción</option>
+              <option value="Puesta en Marcha">Puesta en Marcha</option>
+              <option value="Disposición Final">Disposición Final</option>
             </select>
             <button onClick={handleStart} disabled={!canProceed()} style={{ ...styles.button, opacity: canProceed() ? 1 : 0.5 }}>
               Comenzar evaluación
@@ -137,7 +147,7 @@ function Participante() {
                 {['1.1','1.2'].includes(sesion) ? (
                   <div style={styles.grid2}>
                     <div><label>Impacto (1–5):</label><br/><input type="number" min="1" max="5" value={respuestas[index]?.impacto || ''} onChange={e => handleChange(index, 'impacto', e.target.value)} /></div>
-                    <div><label>Frecuencia (1–5):</label><br/><input type="number" min="1" max="5" value={respuestas[index]?.frecuencia || ''} onChange={e => handleChange(index, 'frecuencia', e.target.value)} /></div>
+                    <div><label>Frecuencia (1–5):</label><br/><input type="number" min="1"	max="5" value={respuestas[index]?.frecuencia || ''} onChange={e => handleChange(index, 'frecuencia', e.target.value)} /></div>
                     <div><label>% Imp. Impacto:</label><br/><input type="number" min="0" max="100" value={respuestas[index]?.importancia_impacto || ''} onChange={e => handleChange(index, 'importancia_impacto', e.target.value)} /></div>
                     <div><label>% Imp. Frecuencia:</label><br/><input type="number" min="0" max="100" value={respuestas[index]?.importancia_frecuencia || ''} onChange={e => handleChange(index, 'importancia_frecuencia', e.target.value)} /></div>
                     <div><strong>Score Base:</strong> {respuestas[index]?.score_base || 0}</div>
@@ -178,7 +188,7 @@ const styles = {
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: '16px',
     padding: '40px',
-    maxWidth: '900px',
+   	maxWidth: '900px',
     width: '100%',
     textAlign: 'center',
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
@@ -200,7 +210,7 @@ const styles = {
     fontWeight: '600',
     borderRadius: '6px',
     cursor: 'pointer',
-    marginTop: '15px'
+   	marginTop: '15px'
   },
   detail: {
     marginBottom: '20px',
@@ -208,23 +218,22 @@ const styles = {
   },
   grid2: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+   	gridTemplateColumns: '1fr 1fr',
     gap: '20px',
-    marginTop: '10px'
+   	marginTop: '10px'
   },
   wrap: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '10px',
     justifyContent: 'center',
-    marginTop: '10px'
+   	marginTop: '10px'
   },
   checkboxLabel: {
     display: 'inline-flex',
-    alignItems: 'center',
+   	alignItems: 'center',
     marginRight: '15px'
   }
 };
 
 export default Participante;
-
