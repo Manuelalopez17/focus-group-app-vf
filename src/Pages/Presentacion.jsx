@@ -6,7 +6,6 @@ import { supabase } from '../supabaseClient';
 export default function Presentacion() {
   const navigate = useNavigate();
   const { search } = useLocation();
-  // Sacamos la sesión de la query string: /presentacion?sesion=1.1
   const sesion = new URLSearchParams(search).get('sesion') || '';
 
   const [nombre, setNombre] = useState('');
@@ -15,24 +14,24 @@ export default function Presentacion() {
   const [rol, setRol] = useState('');
   const [email, setEmail] = useState('');
 
-  // Sólo habilita el botón cuando todos los campos tengan algo
-  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.trim() !== '');
+  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.trim());
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
-    // Insert puro: RLS está desactivado en la tabla `experts`
+    // Usamos upsert para ignorar duplicados en 'email'
     const { error } = await supabase
       .from('experts')
-      .insert([
-        {
+      .upsert(
+        [{
           nombre,
           empresa,
           experiencia: Number(experiencia),
           rol,
-          email
-        }
-      ]);
+          email,
+        }],
+        { onConflict: ['email'] }
+      );
 
     if (error) {
       console.error('Error guardando experto:', error);
@@ -40,7 +39,6 @@ export default function Presentacion() {
       return;
     }
 
-    // Guardamos el email para las siguientes pantallas y vamos a Login
     localStorage.setItem('expertEmail', email);
     navigate(`/login?sesion=${sesion}`, { replace: true });
   };
@@ -85,10 +83,7 @@ export default function Presentacion() {
         />
 
         <button
-          style={{
-            ...styles.button,
-            opacity: canSubmit ? 1 : 0.5
-          }}
+          style={{ ...styles.button, opacity: canSubmit ? 1 : 0.5 }}
           disabled={!canSubmit}
           onClick={handleSubmit}
         >
@@ -101,39 +96,18 @@ export default function Presentacion() {
 
 const styles = {
   container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundImage: 'url("/proyecto.png")',
-    backgroundSize: 'cover',
-    fontFamily: "'Poppins', sans-serif"
+    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    backgroundImage: 'url("/proyecto.png")', backgroundSize: 'cover', fontFamily: "'Poppins', sans-serif'"
   },
   card: {
-    background: 'rgba(255,255,255,0.9)',
-    padding: '40px',
-    borderRadius: '12px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: '400px',
-    textAlign: 'center'
+    background: 'rgba(255,255,255,0.9)', padding: '40px', borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px', textAlign: 'center'
   },
   input: {
-    width: '100%',
-    padding: '10px',
-    margin: '8px 0',
-    borderRadius: '6px',
-    border: '1px solid #ccc'
+    width: '100%', padding: '10px', margin: '8px 0', borderRadius: '6px', border: '1px solid #ccc'
   },
   button: {
-    marginTop: '16px',
-    width: '100%',
-    padding: '12px',
-    background: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '16px'
+    marginTop: '16px', width: '100%', padding: '12px', background: '#007bff', color: 'white',
+    border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '16px'
   }
 };
