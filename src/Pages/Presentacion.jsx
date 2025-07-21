@@ -1,4 +1,3 @@
-// src/Pages/Presentacion.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -11,24 +10,23 @@ export default function Presentacion() {
   const [rol, setRol] = useState('');
   const [email, setEmail] = useState('');
 
-  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.trim());
+  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.toString().trim());
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
+    // Insert en lugar de upsert para no disparar UPDATE bajo RLS
     const { error } = await supabase
       .from('experts')
-      .upsert(
-        [{ nombre, empresa, experiencia, rol, email }],
-        { onConflict: 'email' }
-      );
+      .insert([{ nombre, empresa, experiencia, rol, email }]);
+
     if (error) {
       console.error('Error guardando experto:', error);
       alert(`Error al guardar: ${error.message}`);
       return;
     }
 
-    // Guardamos el email para identificar al experto en siguientes pantallas
+    // Guardar correo y continuar al login
     localStorage.setItem('expertEmail', email);
     navigate('/login');
   };
