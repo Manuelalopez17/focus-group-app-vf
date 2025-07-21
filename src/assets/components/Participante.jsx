@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 
 export default function Participante() {
-  const sesionesDisponibles = ['1.1', '1.2', '2.1', '2.2'];
+  const sesiulesDisponibles = ['1.1', '1.2', '2.1', '2.2'];
   const etapasProyecto = [
     'Abastecimiento',
     'Prefactibilidad y Factibilidad',
@@ -17,22 +17,22 @@ export default function Participante() {
     'Disposición Final'
   ];
 
-  // Datos del participante y control de flujo
+  // --- Datos iniciales del experto y control de flujo ---
   const [sesion, setSesion] = useState('');
-  const [nombre, setNombre] = useState('');
-  const [empresa, setEmpresa] = useState('');
-  const [experiencia, setExperiencia] = useState('');
   const [etapa, setEtapa] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(true);
 
-  // Evaluación de riesgos
+  // --- Riesgos y respuestas ---
   const [riesgos, setRiesgos] = useState([]);
   const [respuestas, setRespuestas] = useState({});
 
-  // Carga de riesgos según la etapa seleccionada
+  // Recupera el email del experto guardado en localStorage
+  const expertEmail = localStorage.getItem('expertEmail');
+
+  // Carga de lista de riesgos segun la etapa
   useEffect(() => {
     if (!etapa) return;
-    const mapRiesgos = {
+    const mapa = {
       Abastecimiento: [
         'Demora en entrega de materiales por parte del proveedor',
         'Recepción de materiales con especificaciones incorrectas',
@@ -89,51 +89,46 @@ export default function Participante() {
         'Desconocimiento de normativas ambientales aplicables'
       ]
     };
-    setRiesgos(mapRiesgos[etapa] || []);
+    setRiesgos(mapa[etapa] || []);
   }, [etapa]);
 
-  // Validación para iniciar la evaluación
-  const canIniciar = () =>
-    sesionesDisponibles.includes(sesion) &&
-    nombre.trim() &&
-    empresa.trim() &&
-    experiencia.trim() &&
-    etapa.trim();
+  // Validar que se haya escogido sesión y etapa antes de continuar
+  const canIniciar = () => sesionesDisponibles.includes(sesion) && etapa;
 
   const handleStart = () => {
-    if (canIniciar()) {
-      setMostrarFormulario(false);
-    }
+    if (!canIniciar()) return;
+    setMostrarFormulario(false);
   };
 
-  // Manejador de cambios en inputs de riesgo
-  const handleChange = (idx, field, value) => {
+  // Actualiza respuestas y auto‑suma de porcentajes
+  const handleChange = (i, field, val) => {
     setRespuestas(prev => {
       const copy = { ...prev };
-      copy[idx] = copy[idx] || {};
+      copy[i] = copy[i] || {};
 
+      // Para impacto/frecuencia usamos Number
+      if (field === 'impacto' || field === 'frecuencia') {
+        copy[i][field] = Number(val);
+      } 
       // Auto‑sumar porcentajes
-      if (field === 'importancia_impacto') {
-        const imp = Number(value);
-        copy[idx].importancia_impacto = imp;
-        copy[idx].importancia_frecuencia = 100 - imp;
+      else if (field === 'importancia_impacto') {
+        const imp = Number(val);
+        copy[i].importancia_impacto = imp;
+        copy[i].importancia_frecuencia = 100 - imp;
       } else if (field === 'importancia_frecuencia') {
-        const frec = Number(value);
-        copy[idx].importancia_frecuencia = frec;
-        copy[idx].importancia_impacto = 100 - frec;
-      } else {
-        // Otros campos (impacto, frecuencia)
-        copy[idx][field] = Number(value);
+        const frec = Number(val);
+        copy[i].importancia_frecuencia = frec;
+        copy[i].importancia_impacto = 100 - frec;
       }
 
       // Recalcular scores en sesiones 1.x
       if (['1.1', '1.2'].includes(sesion)) {
-        const imp = copy[idx].impacto || 0;
-        const frec = copy[idx].frecuencia || 0;
-        const impImp = copy[idx].importancia_impacto || 0;
-        const impFrec = copy[idx].importancia_frecuencia || 0;
-        copy[idx].score_base = (imp * frec).toFixed(2);
-        copy[idx].score_final = (
+        const imp = copy[i].impacto || 0;
+        const frec = copy[i].frecuencia || 0;
+        const impImp = copy[i].importancia_impacto || 0;
+        const impFrec = copy[i].importancia_frecuencia || 0;
+        copy[i].score_base = (imp * frec).toFixed(2);
+        copy[i].score_final = (
           imp * (impImp / 100) + frec * (impFrec / 100)
         ).toFixed(2);
       }
@@ -142,51 +137,55 @@ export default function Participante() {
     });
   };
 
-  // Manejador de checkboxes en sesiones 2.x
-  const handleCheckbox = (idx, etapaName) => {
+  // Manejador de checkboxes en 2.x
+  const handleCheckbox = (i, etapaName) => {
     setRespuestas(prev => {
       const copy = { ...prev };
-      copy[idx] = copy[idx] || {};
-      const arr = copy[idx].etapas_afectadas || [];
-      copy[idx].etapas_afectadas = arr.includes(etapaName)
+      copy[i] = copy[i] || {};
+      const arr = copy[i].etapas_afectadas || [];
+      copy[i].etapas_afectadas = arr.includes(etapaName)
         ? arr.filter(e => e !== etapaName)
         : [...arr, etapaName];
       return copy;
     });
   };
 
-  // Envío final a Supabase
+  // Envío final de todas las respuestas junto a expert_email
   const handleSubmit = async () => {
     for (let i = 0; i < riesgos.length; i++) {
       const resp = respuestas[i] || {};
       const payload = {
+        expert_email: expertEmail,
         sesion,
         etapa,
         riesgo: riesgos[i],
-        nombre,
-        empresa,
-        experiencia
+        // sólo para 1.x:
+        ...(['1.1', '1.2'].includes(sesion)
+          ? {
+              impacto: resp.impacto,
+              frecuencia: resp.frecuencia,
+              importancia_impacto: resp.importancia_impacto,
+              importancia_frecuencia: resp.importancia_frecuencia,
+              score_base: resp.score_base,
+              score_final: resp.score_final
+            }
+          : { etapas_afectadas: resp.etapas_afectadas })
       };
-
-      if (['1.1', '1.2'].includes(sesion)) {
-        payload.impacto = resp.impacto || 0;
-        payload.frecuencia = resp.frecuencia || 0;
-        payload.importancia_impacto = resp.importancia_impacto || 0;
-        payload.importancia_frecuencia = resp.importancia_frecuencia || 0;
-        payload.score_base = resp.score_base || 0;
-        payload.score_final = resp.score_final || 0;
-      } else {
-        payload.etapas_afectadas = resp.etapas_afectadas || [];
-      }
 
       const { error } = await supabase
         .from('focus-group-db')
         .insert([payload]);
 
-      if (error) console.error('Insert error:', error);
+      if (error) {
+        console.error('Insert error:', error);
+        alert(`Error al guardar la respuesta ${i + 1}: ${error.message}`);
+        return;
+      }
     }
-    // Volver al formulario inicial si quieres repetir
+    alert('Respuestas enviadas correctamente');
+    // Reinicia al formulario de selección si quieres repetir
     setMostrarFormulario(true);
+    setRespuestas({});
   };
 
   return (
@@ -194,28 +193,7 @@ export default function Participante() {
       <div style={styles.card}>
         {mostrarFormulario ? (
           <>
-            <h2>Bienvenido</h2>
-            <input
-              style={styles.input}
-              type="text"
-              placeholder="Nombre completo"
-              value={nombre}
-              onChange={e => setNombre(e.target.value)}
-            />
-            <input
-              style={styles.input}
-              type="text"
-              placeholder="Empresa"
-              value={empresa}
-              onChange={e => setEmpresa(e.target.value)}
-            />
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Años de experiencia"
-              value={experiencia}
-              onChange={e => setExperiencia(e.target.value)}
-            />
+            <h2>Sesión {sesion}</h2>
             <select
               style={styles.input}
               value={sesion}
@@ -241,14 +219,11 @@ export default function Participante() {
               ))}
             </select>
             <button
-              style={{
-                ...styles.button,
-                opacity: canIniciar() ? 1 : 0.5
-              }}
+              style={{ ...styles.button, opacity: canIniciar() ? 1 : 0.5 }}
               disabled={!canIniciar()}
               onClick={handleStart}
             >
-              Iniciar Sesión
+              Comenzar evaluación
             </button>
           </>
         ) : (
@@ -258,46 +233,36 @@ export default function Participante() {
             </h2>
             <p style={styles.note}>
               {['1.1', '1.2'].includes(sesion)
-                ? 'Califica Impacto, Frecuencia y sus porcentajes.'
-                : 'Selecciona las etapas afectadas por cada riesgo.'}
+                ? 'Califica Impacto, Frecuencia y %'
+                : 'Selecciona las etapas afectadas'}
             </p>
             {riesgos.map((r, i) => (
               <details key={i} style={styles.detail}>
-                <summary>
-                  <strong>{r}</strong>
-                </summary>
-
+                <summary>{r}</summary>
                 {['1.1', '1.2'].includes(sesion) ? (
                   <div style={styles.grid2}>
                     <div>
-                      <label>Impacto (1–5):</label>
-                      <br />
+                      <label>Impacto (1–5)</label>
                       <input
                         type="number"
                         min="1"
                         max="5"
                         value={respuestas[i]?.impacto || ''}
-                        onChange={e =>
-                          handleChange(i, 'impacto', e.target.value)
-                        }
+                        onChange={e => handleChange(i, 'impacto', e.target.value)}
                       />
                     </div>
                     <div>
-                      <label>Frecuencia (1–5):</label>
-                      <br />
+                      <label>Frecuencia (1–5)</label>
                       <input
                         type="number"
                         min="1"
                         max="5"
                         value={respuestas[i]?.frecuencia || ''}
-                        onChange={e =>
-                          handleChange(i, 'frecuencia', e.target.value)
-                        }
+                        onChange={e => handleChange(i, 'frecuencia', e.target.value)}
                       />
                     </div>
                     <div>
-                      <label>% Impacto:</label>
-                      <br />
+                      <label>% Impacto</label>
                       <input
                         type="number"
                         min="0"
@@ -309,8 +274,7 @@ export default function Participante() {
                       />
                     </div>
                     <div>
-                      <label>% Frecuencia:</label>
-                      <br />
+                      <label>% Frecuencia</label>
                       <input
                         type="number"
                         min="0"
@@ -320,12 +284,6 @@ export default function Participante() {
                           handleChange(i, 'importancia_frecuencia', e.target.value)
                         }
                       />
-                    </div>
-                    <div>
-                      <strong>Score Base:</strong> {respuestas[i]?.score_base || 0}
-                    </div>
-                    <div>
-                      <strong>Score Final:</strong> {respuestas[i]?.score_final || 0}
                     </div>
                   </div>
                 ) : (
@@ -393,14 +351,8 @@ const styles = {
     cursor: 'pointer',
     marginTop: '15px'
   },
-  note: {
-    fontStyle: 'italic',
-    marginBottom: '20px'
-  },
-  detail: {
-    textAlign: 'left',
-    marginBottom: '20px'
-  },
+  note: { fontStyle: 'italic', marginBottom: '20px' },
+  detail: { textAlign: 'left', marginBottom: '20px' },
   grid2: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -414,9 +366,5 @@ const styles = {
     marginTop: '10px',
     justifyContent: 'center'
   },
-  checkboxLabel: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    marginRight: '15px'
-  }
+  checkboxLabel: { display: 'inline-flex', alignItems: 'center', marginRight: '15px' }
 };
