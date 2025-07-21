@@ -106,7 +106,19 @@ export default function Participante() {
     setRespuestas(prev => {
       const copy = { ...prev };
       copy[index] = copy[index] || {};
-      copy[index][campo] = valor;
+
+      if (campo === 'importancia_impacto') {
+        const imp = Number(valor);
+        copy[index].importancia_impacto = imp;
+        copy[index].importancia_frecuencia = 100 - imp;
+      } else if (campo === 'importancia_frecuencia') {
+        const frec = Number(valor);
+        copy[index].importancia_frecuencia = frec;
+        copy[index].importancia_impacto = 100 - frec;
+      } else {
+        copy[index][campo] = valor;
+      }
+
       if (['1.1', '1.2'].includes(sesion)) {
         const imp = parseFloat(copy[index].impacto || 0);
         const frec = parseFloat(copy[index].frecuencia || 0);
@@ -117,6 +129,7 @@ export default function Participante() {
           imp * (impImp / 100) + frec * (impFrec / 100)
         ).toFixed(2);
       }
+
       return copy;
     });
   };
@@ -144,6 +157,7 @@ export default function Participante() {
         empresa,
         experiencia
       };
+
       if (['1.1', '1.2'].includes(sesion)) {
         Object.assign(payload, {
           impacto: resp.impacto || 0,
@@ -156,9 +170,14 @@ export default function Participante() {
       } else if (['2.1', '2.2'].includes(sesion)) {
         payload.etapas_afectadas = resp.etapas_afectadas || [];
       }
-      await supabase.from('respuestas').insert([payload]);
+
+      const { data, error } = await supabase
+        .from('focus-group-db')
+        .insert([payload]);
+
+      if (error) console.error('❌ Error insert respuesta:', error);
+      else console.log('✅ Insert ok:', data);
     }
-    alert('Respuestas enviadas correctamente.');
     setMostrarFormulario(true);
   };
 
@@ -217,9 +236,7 @@ export default function Participante() {
           </>
         ) : (
           <>
-            <h2>
-              Sesión {sesion} – Etapa: {etapa}
-            </h2>
+            <h2>Sesión {sesion} – Etapa: {etapa}</h2>
             <p style={styles.note}>
               {['1.1', '1.2'].includes(sesion)
                 ? 'En esta sesión (1.x) califica Impacto, Frecuencia y sus ponderaciones.'
@@ -227,15 +244,15 @@ export default function Participante() {
                 ? 'En esta sesión (2.x) selecciona las etapas del proyecto afectadas por cada riesgo.'
                 : ''}
             </p>
-            <p style={styles.note}>Despliega cada riesgo para ver la pregunta correspondiente.</p>
+            <p style={styles.note}>
+              Despliega cada riesgo para ver la pregunta correspondiente.
+            </p>
             {riesgos.map((r, index) => (
               <details key={index} style={styles.detail}>
-                <summary>
-                  <strong>{r}</strong>
-                </summary>
+                <summary><strong>{r}</strong></summary>
+
                 {['1.1', '1.2'].includes(sesion) ? (
                   <div style={styles.grid2}>
-                    {/* Inputs de impacto/frecuencia para 1.x */}
                     <div>
                       <label>Impacto (1–5):</label><br />
                       <input
@@ -276,23 +293,17 @@ export default function Participante() {
                         onChange={e => handleChange(index, 'importancia_frecuencia', e.target.value)}
                       />
                     </div>
-                    <div>
-                      <strong>Score Base:</strong> {respuestas[index]?.score_base || 0}
-                    </div>
-                    <div>
-                      <strong>Score Final:</strong> {respuestas[index]?.score_final || 0}
-                    </div>
+                    <div><strong>Score Base:</strong> {respuestas[index]?.score_base || 0}</div>
+                    <div><strong>Score Final:</strong> {respuestas[index]?.score_final || 0}</div>
                   </div>
                 ) : ['2.1','2.2'].includes(sesion) ? (
                   <div style={styles.wrap}>
-                    {/* Checkboxes para 2.x */}
                     {etapasProyecto.map(ep => (
                       <label key={ep} style={styles.checkboxLabel}>
                         <input
                           type="checkbox"
                           onChange={() => handleCheckbox(index, ep)}
-                        />{' '}
-                        {ep}
+                        />{' '}{ep}
                       </label>
                     ))}
                   </div>
@@ -319,7 +330,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '30px',
-    fontFamily: "'Poppins', sans-serif"
+    fontFamily: "'Poppins', sans-serif'"
   },
   card: {
     backgroundColor: 'rgba(255,255,255,0.8)',
