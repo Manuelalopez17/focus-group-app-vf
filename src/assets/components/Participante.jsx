@@ -1,306 +1,210 @@
-import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import supabase from '../supabaseClient';
 
-const etapasProyecto = [
-  "Abastecimiento",
-  "Prefactibilidad y Factibilidad",
-  "Planeación",
-  "Contratación y Adquisición",
-  "Diseño",
-  "Fabricación",
-  "Logística y Transporte",
-  "Montaje",
-  "Construcción",
-  "Puesta en Marcha",
-  "Disposición Final"
-];
-
-const riesgosEjemplo = {
-  Abastecimiento: [
-    "Ejemplo de riesgo 1 para Abastecimiento",
-    "Ejemplo de riesgo 2 para Abastecimiento",
-    "Ejemplo de riesgo 3 para Abastecimiento"
-  ]
-};
-
-const Participante = () => {
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
-  const sesionParam = params.get("session") || params.get("sesion") || "";
-
-  const tipoSesion = sesionParam.split(".")[0];
-  const esSesion1 = tipoSesion === "1";
-  const esSesion2 = tipoSesion === "2";
-
-  const [nombre, setNombre] = useState("");
-  const [empresa, setEmpresa] = useState("");
-  const [experiencia, setExperiencia] = useState("");
-  const [etapa, setEtapa] = useState("");
-  const [formularioCompletado, setFormularioCompletado] = useState(false);
-  const [paginaActual, setPaginaActual] = useState(1);
+function Participante() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const sesion = searchParams.get('sesion');
+  const [etapa, setEtapa] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [empresa, setEmpresa] = useState('');
+  const [experiencia, setExperiencia] = useState('');
+  const [mostrarFormulario, setMostrarFormulario] = useState(true);
   const [respuestas, setRespuestas] = useState({});
-  const [evaluacionFinalizada, setEvaluacionFinalizada] = useState(false);
+  const [riesgos, setRiesgos] = useState([]);
 
-  const riesgos = riesgosEjemplo[etapa] || [];
-  const riesgosPorPagina = 5;
-  const totalPaginas = Math.ceil(riesgos.length / riesgosPorPagina);
-  const riesgosPagina = riesgos.slice(
-    (paginaActual - 1) * riesgosPorPagina,
-    paginaActual * riesgosPorPagina
-  );
+  const etapasProyecto = [
+    'Abastecimiento',
+    'Prefactibilidad y Factibilidad',
+    'Planeación',
+    'Contratación y Adquisición',
+    'Diseño',
+    'Fabricación',
+    'Logística y Transporte',
+    'Montaje',
+    'Construcción',
+    'Puesta en Marcha',
+    'Disposición Final'
+  ];
 
-  const handleRespuesta = (riesgo, campo, valor) => {
-    setRespuestas(prev => {
-      const nueva = { ...(prev[riesgo] || {}), [campo]: valor };
+  useEffect(() => {
+    if (etapa) {
+      // Simulación de carga de riesgos por etapa
+      setRiesgos([
+        `Ejemplo de riesgo 1 para ${etapa}`,
+        `Ejemplo de riesgo 2 para ${etapa}`,
+        `Ejemplo de riesgo 3 para ${etapa}`
+      ]);
+    }
+  }, [etapa]);
 
-      if (campo === "importancia_impacto") {
-        nueva.importancia_frecuencia = 100 - valor;
-      }
-      if (campo === "importancia_frecuencia") {
-        nueva.importancia_impacto = 100 - valor;
-      }
-
-      const {
-        impacto,
-        frecuencia,
-        importancia_impacto,
-        importancia_frecuencia
-      } = nueva;
-
-      if (
-        impacto != null &&
-        frecuencia != null &&
-        importancia_impacto != null &&
-        importancia_frecuencia != null
-      ) {
-        nueva.score_base = impacto * frecuencia;
-        nueva.score_final = Math.round(
-          (importancia_impacto * impacto + importancia_frecuencia * frecuencia) / 100
-        );
-      }
-
-      return { ...prev, [riesgo]: nueva };
-    });
-  };
-
-  const handleCheckboxEtapas = (riesgo, et) => {
-    setRespuestas(prev => {
-      const actuales = prev[riesgo]?.etapas_afectadas || [];
-      const nuevas = actuales.includes(et)
-        ? actuales.filter(x => x !== et)
-        : [...actuales, et];
+  const handleChange = (riesgo, field, value) => {
+    setRespuestas((prev) => {
+      const nuevo = {
+        ...prev[riesgo],
+        [field]: value
+      };
+      const impacto = parseFloat(nuevo.impacto) || 0;
+      const frecuencia = parseFloat(nuevo.frecuencia) || 0;
+      const impImpacto = parseFloat(nuevo.importancia_impacto) || 0;
+      const impFrecuencia = parseFloat(nuevo.importancia_frecuencia) || 0;
+      const score_base = impacto * frecuencia;
+      const score_final = (impacto * impImpacto + frecuencia * impFrecuencia) / 100;
       return {
         ...prev,
-        [riesgo]: { ...(prev[riesgo] || {}), etapas_afectadas: nuevas }
+        [riesgo]: {
+          ...nuevo,
+          score_base,
+          score_final
+        }
       };
     });
   };
 
-  const guardarRespuestas = async () => {
-    try {
-      for (const [riesgo, datos] of Object.entries(respuestas)) {
-        const { error } = await supabase.from("focus-group-db").insert({
-          sesion: sesionParam,
-          etapa,
-          riesgo,
-          nombre,
-          empresa,
-          experiencia: parseInt(experiencia),
-          ...datos
-        });
-        if (error) throw error;
-      }
-      setEvaluacionFinalizada(true);
-    } catch (error) {
-      console.error("Error al guardar en Supabase:", error);
-      alert("Hubo un error al guardar las respuestas. Intenta nuevamente.");
+  const handleSubmit = async () => {
+    for (const riesgo of riesgos) {
+      const r = respuestas[riesgo] || {};
+      await supabase.from('respuestas').insert({
+        sesion,
+        etapa,
+        riesgo,
+        nombre,
+        empresa,
+        experiencia,
+        impacto: r.impacto || 0,
+        frecuencia: r.frecuencia || 0,
+        importancia_impacto: r.importancia_impacto || 0,
+        importancia_frecuencia: r.importancia_frecuencia || 0,
+        score_base: r.score_base || 0,
+        score_final: r.score_final || 0
+      });
     }
+    alert('Respuestas enviadas con éxito');
   };
 
-  const validarYComenzar = () => {
-    if (!nombre || !empresa || !experiencia || !etapa) {
-      alert("Por favor completa todos los campos antes de continuar.");
-      return;
-    }
-    setFormularioCompletado(true);
-  };
+  if (mostrarFormulario) {
+    return (
+      <div
+        style={{
+          backgroundImage: 'url(/proyecto.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}
+      >
+        <div style={{
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          borderRadius: '15px',
+          padding: '30px',
+          maxWidth: '600px',
+          width: '100%',
+          textAlign: 'center',
+        }}>
+          <h2 style={{ fontWeight: 700 }}>P6 – Proyecto Riesgos</h2>
+          <input placeholder="Nombre completo" value={nombre} onChange={(e) => setNombre(e.target.value)} style={inputStyle} />
+          <input placeholder="Empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} style={inputStyle} />
+          <input placeholder="Años de experiencia" value={experiencia} onChange={(e) => setExperiencia(e.target.value)} style={inputStyle} />
+          <select value={etapa} onChange={(e) => setEtapa(e.target.value)} style={inputStyle}>
+            <option value="">Seleccione la etapa</option>
+            {etapasProyecto.map((etapa) => (
+              <option key={etapa} value={etapa}>{etapa}</option>
+            ))}
+          </select>
+          <button onClick={() => setMostrarFormulario(false)} style={buttonStyle}>
+            Comenzar evaluación
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       style={{
-        backgroundImage: "url('/edificio.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        minHeight: "100vh",
-        padding: "40px",
-        fontFamily: "Arial, sans-serif",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
+        backgroundImage: 'url(/proyecto.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        minHeight: '100vh',
+        padding: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'Poppins', sans-serif",
       }}
     >
-      <div
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.85)",
-          padding: "30px",
-          borderRadius: "16px",
-          maxWidth: "950px",
-          width: "100%",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-          textAlign: "center"
-        }}
-      >
-        {!formularioCompletado ? (
-          <>
-            <h2 style={{ marginBottom: "20px" }}>P6 – Proyecto Riesgos</h2>
-            <input
-              placeholder="Nombre completo"
-              value={nombre}
-              onChange={e => setNombre(e.target.value)}
-              style={{ marginBottom: "10px", width: "100%", padding: "10px" }}
-            />
-            <input
-              placeholder="Empresa"
-              value={empresa}
-              onChange={e => setEmpresa(e.target.value)}
-              style={{ marginBottom: "10px", width: "100%", padding: "10px" }}
-            />
-            <input
-              placeholder="Años de experiencia"
-              type="number"
-              value={experiencia}
-              onChange={e => setExperiencia(e.target.value)}
-              style={{ marginBottom: "10px", width: "100%", padding: "10px" }}
-            />
-            <select
-              value={etapa}
-              onChange={e => setEtapa(e.target.value)}
-              style={{ marginBottom: "20px", width: "100%", padding: "10px" }}
-            >
-              <option value="">Seleccione la etapa</option>
-              {etapasProyecto.map(e => (
-                <option key={e} value={e}>
-                  {e}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={validarYComenzar}
-              style={{
-                backgroundColor: "#007bff",
-                color: "white",
-                padding: "12px 20px",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontWeight: "600",
-                width: "100%"
-              }}
-            >
-              Comenzar evaluación
-            </button>
-          </>
-        ) : evaluacionFinalizada ? (
-          <>
-            <h2 style={{ color: "#28a745" }}>¡Gracias por participar!</h2>
-            <p>Tu evaluación ha sido enviada exitosamente.</p>
-            <p>Cierra esta ventana o vuelve a la página principal.</p>
-          </>
-        ) : (
-          <>
-            <h2>Riesgos para la etapa: {etapa}</h2>
-
-            {riesgosPagina.map((riesgo, idx) => (
-              <details
-                key={idx}
-                style={{ margin: "15px 0", textAlign: "left" }}
-              >
-                <summary><strong>{riesgo}</strong></summary>
-
-                {esSesion1 && (
-                  <>
-                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '10px' }}>
-                      <label>Impacto (1–5):<br />
-                        <input
-                          type="number"
-                          min="1"
-                          max="5"
-                          value={respuestas[riesgo]?.impacto || ""}
-                          onChange={e => handleRespuesta(riesgo, "impacto", Number(e.target.value))}
-                        />
-                      </label>
-                      <label>Frecuencia (1–5):<br />
-                        <input
-                          type="number"
-                          min="1"
-                          max="5"
-                          value={respuestas[riesgo]?.frecuencia || ""}
-                          onChange={e => handleRespuesta(riesgo, "frecuencia", Number(e.target.value))}
-                        />
-                      </label>
-                    </div>
-                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '10px' }}>
-                      <label>% Imp. Impacto (0–100%):<br />
-                        <input
-                          type="number"
-                          value={respuestas[riesgo]?.importancia_impacto || ""}
-                          onChange={e => handleRespuesta(riesgo, "importancia_impacto", Number(e.target.value))}
-                        />
-                      </label>
-                      <label>% Imp. Frecuencia (0–100%):<br />
-                        <input
-                          type="number"
-                          value={respuestas[riesgo]?.importancia_frecuencia || ""}
-                          onChange={e => handleRespuesta(riesgo, "importancia_frecuencia", Number(e.target.value))}
-                        />
-                      </label>
-                    </div>
-                    <p>Score Base: {respuestas[riesgo]?.score_base ?? 0}</p>
-                    <p>Score Final: {respuestas[riesgo]?.score_final ?? 0}</p>
-                  </>
-                )}
-
-                {esSesion2 && (
-                  <>
-                    <p>¿En qué etapas se presenta el efecto de este riesgo?</p>
-                    {etapasProyecto.map((et, j) => (
-                      <label key={j} style={{ marginRight: "10px" }}>
-                        <input
-                          type="checkbox"
-                          checked={respuestas[riesgo]?.etapas_afectadas?.includes(et) || false}
-                          onChange={() => handleCheckboxEtapas(riesgo, et)}
-                        />
-                        {et}
-                      </label>
-                    ))}
-                  </>
-                )}
-              </details>
-            ))}
-
-            <div style={{ marginTop: "20px" }}>
-              {paginaActual > 1 && (
-                <button onClick={() => setPaginaActual(p => p - 1)}>
-                  Anterior
-                </button>
-              )}
-              {paginaActual < totalPaginas && (
-                <button onClick={() => setPaginaActual(p => p + 1)}>
-                  Siguiente
-                </button>
-              )}
-              {paginaActual === totalPaginas && (
-                <button onClick={guardarRespuestas}>
-                  Enviar respuestas
-                </button>
-              )}
+      <div style={{
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        borderRadius: '15px',
+        padding: '30px',
+        width: '90%',
+        maxWidth: '800px',
+        textAlign: 'center',
+      }}>
+        <h2>Riesgos para la etapa: {etapa}</h2>
+        {riesgos.map((riesgo, index) => (
+          <details key={index} style={{ marginBottom: '20px', textAlign: 'left' }}>
+            <summary><strong>{riesgo}</strong></summary>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '10px' }}>
+              <label>Impacto (1–5):<br />
+                <input type="number" min="1" max="5" value={respuestas[riesgo]?.impacto || ''} onChange={(e) => handleChange(riesgo, 'impacto', e.target.value)} style={inputBox} />
+              </label>
+              <label>Frecuencia (1–5):<br />
+                <input type="number" min="1" max="5" value={respuestas[riesgo]?.frecuencia || ''} onChange={(e) => handleChange(riesgo, 'frecuencia', e.target.value)} style={inputBox} />
+              </label>
             </div>
-          </>
-        )}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '10px' }}>
+              <label>% Imp. Impacto (0–100%):<br />
+                <input type="number" min="0" max="100" value={respuestas[riesgo]?.importancia_impacto || ''} onChange={(e) => handleChange(riesgo, 'importancia_impacto', e.target.value)} style={inputBox} />
+              </label>
+              <label>% Imp. Frecuencia (0–100%):<br />
+                <input type="number" min="0" max="100" value={respuestas[riesgo]?.importancia_frecuencia || ''} onChange={(e) => handleChange(riesgo, 'importancia_frecuencia', e.target.value)} style={inputBox} />
+              </label>
+            </div>
+            <p><strong>Score Base:</strong> {respuestas[riesgo]?.score_base || 0}</p>
+            <p><strong>Score Final:</strong> {respuestas[riesgo]?.score_final || 0}</p>
+          </details>
+        ))}
+        <button onClick={handleSubmit} style={buttonStyle}>
+          Enviar respuestas
+        </button>
       </div>
     </div>
   );
+}
+
+const inputStyle = {
+  marginBottom: '15px',
+  padding: '10px',
+  width: '100%',
+  fontSize: '16px',
+  borderRadius: '6px',
+  border: '1px solid #ccc'
+};
+
+const inputBox = {
+  padding: '8px',
+  fontSize: '14px',
+  width: '150px',
+  borderRadius: '5px',
+  border: '1px solid #ccc',
+  marginTop: '5px'
+};
+
+const buttonStyle = {
+  marginTop: '20px',
+  backgroundColor: '#007bff',
+  color: 'white',
+  padding: '12px 20px',
+  border: 'none',
+  borderRadius: '6px',
+  fontSize: '16px',
+  fontWeight: '600',
+  cursor: 'pointer'
 };
 
 export default Participante;
