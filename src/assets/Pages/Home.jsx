@@ -16,7 +16,9 @@ function Home() {
   return (
     <div
       style={{
-        backgroundColor: '#fdf7f1', // color crema suave
+        backgroundImage: 'url("/proyecto.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         minHeight: '100vh',
         width: '100%',
         display: 'flex',
@@ -28,7 +30,8 @@ function Home() {
     >
       <div
         style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: 'rgba(255, 255, 255, 0.6)',
+          backdropFilter: 'blur(10px)',
           padding: '40px',
           borderRadius: '15px',
           textAlign: 'center',
