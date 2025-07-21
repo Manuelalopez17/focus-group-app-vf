@@ -17,13 +17,64 @@ function Participante() {
 
   useEffect(() => {
     if (etapa) {
-      // Simulación de carga de riesgos por etapa
-      const riesgosEjemplo = [
-        `Ejemplo de riesgo 1 para ${etapa}`,
-        `Ejemplo de riesgo 2 para ${etapa}`,
-        `Ejemplo de riesgo 3 para ${etapa}`,
-      ];
-      setRiesgos(riesgosEjemplo);
+      const riesgosPorEtapa = {
+        'Abastecimiento': [
+          'Demora en entrega de materiales por parte del proveedor',
+          'Recepción de materiales con especificaciones incorrectas',
+          'Falta de control de calidad en los insumos adquiridos'
+        ],
+        'Prefactibilidad y Factibilidad': [
+          'Falta de análisis adecuado de viabilidad técnica',
+          'Supuestos económicos erróneos en la factibilidad financiera',
+          'Escasa participación de actores clave en etapa temprana'
+        ],
+        'Planeación': [
+          'Errores en la estimación de recursos y tiempos',
+          'No inclusión de contingencias en la planificación',
+          'Cambios constantes en el alcance del proyecto'
+        ],
+        'Contratación y Adquisición': [
+          'Contratación de proveedores sin experiencia en construcción industrializada',
+          'Inadecuada definición de términos contractuales',
+          'Demoras en procesos administrativos de adquisición'
+        ],
+        'Diseño': [
+          'Diseño no compatible con procesos industrializados',
+          'Errores en la integración de disciplinas de diseño',
+          'Ausencia de revisión y validación cruzada'
+        ],
+        'Fabricación': [
+          'Defectos de fabricación en componentes modulares',
+          'Interrupciones en la cadena de producción',
+          'Falta de control en tolerancias de fabricación'
+        ],
+        'Logística y Transporte': [
+          'Retrasos en la entrega por dificultades logísticas',
+          'Daños en módulos durante el transporte',
+          'Problemas de acceso al sitio de construcción'
+        ],
+        'Montaje': [
+          'Descoordinación entre equipos de montaje y logística',
+          'Errores en la secuencia de montaje',
+          'Falta de capacitación en ensamblaje de componentes'
+        ],
+        'Construcción': [
+          'Condiciones climáticas adversas afectan avances',
+          'Incompatibilidad entre componentes industrializados y tradicionales',
+          'Riesgos laborales por manipulación de módulos'
+        ],
+        'Puesta en Marcha': [
+          'Fallos en las pruebas de sistemas instalados',
+          'No conformidad con normativas técnicas',
+          'Demoras en aprobaciones regulatorias finales'
+        ],
+        'Disposición Final': [
+          'Falta de planificación para reciclaje de componentes',
+          'Altos costos de disposición de residuos',
+          'Desconocimiento de normativas ambientales aplicables'
+        ]
+      };
+      setRiesgos(riesgosPorEtapa[etapa] || []);
     }
   }, [etapa]);
 
@@ -100,32 +151,10 @@ function Participante() {
         {mostrarFormulario ? (
           <>
             <h2 style={{ marginBottom: '10px' }}>P6 – Proyecto Riesgos</h2>
-            <input
-              type="text"
-              placeholder="Nombre completo"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="text"
-              placeholder="Empresa"
-              value={empresa}
-              onChange={(e) => setEmpresa(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              placeholder="Años de experiencia"
-              value={experiencia}
-              onChange={(e) => setExperiencia(e.target.value)}
-              style={inputStyle}
-            />
-            <select
-              value={etapa}
-              onChange={(e) => setEtapa(e.target.value)}
-              style={inputStyle}
-            >
+            <input type="text" placeholder="Nombre completo" value={nombre} onChange={(e) => setNombre(e.target.value)} style={inputStyle} />
+            <input type="text" placeholder="Empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} style={inputStyle} />
+            <input type="number" placeholder="Años de experiencia" value={experiencia} onChange={(e) => setExperiencia(e.target.value)} style={inputStyle} />
+            <select value={etapa} onChange={(e) => setEtapa(e.target.value)} style={inputStyle}>
               <option value="">Seleccione la etapa</option>
               <option value="Abastecimiento">Abastecimiento</option>
               <option value="Prefactibilidad y Factibilidad">Prefactibilidad y Factibilidad</option>
@@ -139,7 +168,6 @@ function Participante() {
               <option value="Puesta en Marcha">Puesta en Marcha</option>
               <option value="Disposición Final">Disposición Final</option>
             </select>
-            <br />
             <button onClick={() => setMostrarFormulario(false)} style={buttonStyle}>Comenzar evaluación</button>
           </>
         ) : (
