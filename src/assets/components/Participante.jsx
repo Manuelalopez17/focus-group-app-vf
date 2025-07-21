@@ -30,7 +30,6 @@ function Participante() {
 
   useEffect(() => {
     if (etapa) {
-      // Simulación de carga de riesgos por etapa
       setRiesgos([
         `Ejemplo de riesgo 1 para ${etapa}`,
         `Ejemplo de riesgo 2 para ${etapa}`,
