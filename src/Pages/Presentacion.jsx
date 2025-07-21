@@ -1,12 +1,12 @@
-// src/assets/Pages/Presentacion.jsx
+// src/Pages/Presentacion.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../supabaseClient';
 
 export default function Presentacion() {
   const navigate = useNavigate();
   const { search } = useLocation();
-  // Recogemos la sesión de la query (puedes leer login?sesion=1.1 si lo usas así)
+  // Sacamos la sesión de la query string: /presentacion?sesion=1.1
   const sesion = new URLSearchParams(search).get('sesion') || '';
 
   const [nombre, setNombre] = useState('');
@@ -15,39 +15,33 @@ export default function Presentacion() {
   const [rol, setRol] = useState('');
   const [email, setEmail] = useState('');
 
-  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v =>
-    v.trim()
-  );
+  // Sólo habilita el botón cuando todos los campos tengan algo
+  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.trim() !== '');
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
-    // intentamos upsert por email (columna única)
-    const { data, error } = await supabase
+    // Insert puro: RLS está desactivado en la tabla `experts`
+    const { error } = await supabase
       .from('experts')
-      .upsert(
-        [
-          {
-            nombre,
-            empresa,
-            experiencia: Number(experiencia),
-            rol,
-            email,
-          },
-        ],
-        { onConflict: ['email'] }
-      );
+      .insert([
+        {
+          nombre,
+          empresa,
+          experiencia: Number(experiencia),
+          rol,
+          email
+        }
+      ]);
 
-    // ignorar “duplicate key” si ya existe (código Postgres 23505)
-    if (error && error.code !== '23505') {
+    if (error) {
       console.error('Error guardando experto:', error);
       alert('Hubo un error al guardar. Revisa la consola.');
       return;
     }
 
-    // guardamos en localStorage para las sesiones posteriores
+    // Guardamos el email para las siguientes pantallas y vamos a Login
     localStorage.setItem('expertEmail', email);
-    // navegamos forzosamente al login de la sesión (ox: /login?sesion=1.1)
     navigate(`/login?sesion=${sesion}`, { replace: true });
   };
 
@@ -93,7 +87,7 @@ export default function Presentacion() {
         <button
           style={{
             ...styles.button,
-            opacity: canSubmit ? 1 : 0.5,
+            opacity: canSubmit ? 1 : 0.5
           }}
           disabled={!canSubmit}
           onClick={handleSubmit}
@@ -113,7 +107,7 @@ const styles = {
     justifyContent: 'center',
     backgroundImage: 'url("/proyecto.png")',
     backgroundSize: 'cover',
-    fontFamily: "'Poppins',sans-serif",
+    fontFamily: "'Poppins', sans-serif"
   },
   card: {
     background: 'rgba(255,255,255,0.9)',
@@ -122,14 +116,14 @@ const styles = {
     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
     width: '100%',
     maxWidth: '400px',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   input: {
     width: '100%',
     padding: '10px',
     margin: '8px 0',
     borderRadius: '6px',
-    border: '1px solid #ccc',
+    border: '1px solid #ccc'
   },
   button: {
     marginTop: '16px',
@@ -140,6 +134,6 @@ const styles = {
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '16px',
-  },
+    fontSize: '16px'
+  }
 };
