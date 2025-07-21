@@ -16,12 +16,14 @@ const etapasProyecto = [
   "Disposición Final"
 ];
 
+// Temporal: reemplaza estos con tus riesgos reales por etapa
 const riesgosEjemplo = {
   Abastecimiento: [
     "Ejemplo de riesgo 1 para Abastecimiento",
     "Ejemplo de riesgo 2 para Abastecimiento",
     "Ejemplo de riesgo 3 para Abastecimiento"
   ]
+  // Agrega más etapas y riesgos reales aquí
 };
 
 const Participante = () => {
@@ -40,7 +42,7 @@ const Participante = () => {
   const [formularioCompletado, setFormularioCompletado] = useState(false);
   const [paginaActual, setPaginaActual] = useState(1);
   const [respuestas, setRespuestas] = useState({});
-  const [finalizado, setFinalizado] = useState(false);
+  const [evaluacionFinalizada, setEvaluacionFinalizada] = useState(false);
 
   const riesgos = riesgosEjemplo[etapa] || [];
   const riesgosPorPagina = 5;
@@ -97,14 +99,6 @@ const Participante = () => {
     });
   };
 
-  const validarFormulario = () => {
-    if (!nombre || !empresa || !experiencia || !etapa) {
-      alert("Por favor completa todos los campos antes de continuar.");
-      return;
-    }
-    setFormularioCompletado(true);
-  };
-
   const guardarRespuestas = async () => {
     try {
       for (const [riesgo, datos] of Object.entries(respuestas)) {
@@ -119,74 +113,95 @@ const Participante = () => {
         });
         if (error) throw error;
       }
-      setFinalizado(true);
+      setEvaluacionFinalizada(true); // ← Muestra pantalla de cierre
     } catch (error) {
       console.error("Error al guardar en Supabase:", error);
       alert("Hubo un error al guardar las respuestas. Intenta nuevamente.");
     }
   };
 
+  const validarYComenzar = () => {
+    if (!nombre || !empresa || !experiencia || !etapa) {
+      alert("Por favor completa todos los campos antes de continuar.");
+      return;
+    }
+    setFormularioCompletado(true);
+  };
+
   return (
     <div
       style={{
-        backgroundImage: "url('/proyecto.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
-        width: "100vw",
-        height: "100vh",
-        overflow: "auto",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+        padding: "40px",
+        fontFamily: "Arial, sans-serif"
       }}
     >
       <div
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          backgroundColor: "#fff",
           padding: "30px",
-          borderRadius: "15px",
-          width: "80%",
+          borderRadius: "12px",
           maxWidth: "900px",
-          textAlign: "center"
+          margin: "0 auto",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
         }}
       >
-        {finalizado ? (
-          <div>
-            <h2>✅ Gracias por participar</h2>
-            <p>Tus respuestas han sido registradas correctamente.</p>
-          </div>
-        ) : !formularioCompletado ? (
+        {!formularioCompletado ? (
           <>
-            <h2>P6 – Proyecto Riesgos</h2>
+            <h2 style={{ marginBottom: "20px" }}>P6 – Proyecto Riesgos</h2>
             <input
               placeholder="Nombre completo"
               value={nombre}
               onChange={e => setNombre(e.target.value)}
-            /><br />
+              style={{ marginBottom: "10px", width: "100%", padding: "10px" }}
+            />
             <input
               placeholder="Empresa"
               value={empresa}
               onChange={e => setEmpresa(e.target.value)}
-            /><br />
+              style={{ marginBottom: "10px", width: "100%", padding: "10px" }}
+            />
             <input
               placeholder="Años de experiencia"
               type="number"
               value={experiencia}
               onChange={e => setExperiencia(e.target.value)}
-            /><br />
-            <select value={etapa} onChange={e => setEtapa(e.target.value)}>
+              style={{ marginBottom: "10px", width: "100%", padding: "10px" }}
+            />
+            <select
+              value={etapa}
+              onChange={e => setEtapa(e.target.value)}
+              style={{ marginBottom: "20px", width: "100%", padding: "10px" }}
+            >
               <option value="">Seleccione la etapa</option>
               {etapasProyecto.map(e => (
                 <option key={e} value={e}>
                   {e}
                 </option>
               ))}
-            </select><br />
-            <button onClick={validarFormulario}>
+            </select>
+            <button
+              onClick={validarYComenzar}
+              style={{
+                backgroundColor: "#007bff",
+                color: "white",
+                padding: "12px 20px",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "600",
+                width: "100%"
+              }}
+            >
               Comenzar evaluación
             </button>
+          </>
+        ) : evaluacionFinalizada ? (
+          <>
+            <h2 style={{ color: "#28a745" }}>¡Gracias por participar!</h2>
+            <p>Tu evaluación ha sido enviada exitosamente.</p>
+            <p>Cierra esta ventana o vuelve a la página principal.</p>
           </>
         ) : (
           <>
@@ -201,8 +216,7 @@ const Participante = () => {
 
                 {esSesion1 && (
                   <>
-                    <label>
-                      Impacto:
+                    <label>Impacto:
                       <input
                         type="number"
                         min="1"
@@ -213,8 +227,7 @@ const Participante = () => {
                         }
                       />
                     </label><br />
-                    <label>
-                      Frecuencia:
+                    <label>Frecuencia:
                       <input
                         type="number"
                         min="1"
@@ -225,8 +238,7 @@ const Participante = () => {
                         }
                       />
                     </label><br />
-                    <label>
-                      % Imp. Impacto:
+                    <label>% Imp. Impacto:
                       <input
                         type="number"
                         value={respuestas[riesgo]?.importancia_impacto || ""}
@@ -235,8 +247,7 @@ const Participante = () => {
                         }
                       />
                     </label><br />
-                    <label>
-                      % Imp. Frecuencia:
+                    <label>% Imp. Frecuencia:
                       <input
                         type="number"
                         value={respuestas[riesgo]?.importancia_frecuencia || ""}
