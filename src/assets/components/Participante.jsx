@@ -95,30 +95,62 @@ function Participante() {
           width: '90%',
           maxWidth: '800px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          textAlign: 'center'
         }}
       >
         {!etapaSeleccionada ? (
           <>
-            <h2 style={{ textAlign: 'center' }}>Bienvenido</h2>
-            <p>Por favor completa la siguiente información:</p>
-            <input placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} style={{ width: '100%', marginBottom: '10px', padding: '10px' }} />
-            <input placeholder="Empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} style={{ width: '100%', marginBottom: '10px', padding: '10px' }} />
-            <input placeholder="Años de experiencia" value={experiencia} onChange={(e) => setExperiencia(e.target.value)} style={{ width: '100%', marginBottom: '20px', padding: '10px' }} />
-            <select value={etapaSeleccionada} onChange={(e) => setEtapaSeleccionada(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '20px' }}>
-              <option value="">Selecciona la etapa del proyecto</option>
+            <h2 style={{ marginBottom: '20px', fontWeight: '600' }}>P6 – Proyecto Riesgos</h2>
+            <input
+              placeholder="Nombre completo"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              style={{ width: '100%', marginBottom: '10px', padding: '10px' }}
+            />
+            <input
+              placeholder="Empresa"
+              value={empresa}
+              onChange={(e) => setEmpresa(e.target.value)}
+              style={{ width: '100%', marginBottom: '10px', padding: '10px' }}
+            />
+            <input
+              placeholder="Años de experiencia"
+              value={experiencia}
+              onChange={(e) => setExperiencia(e.target.value)}
+              style={{ width: '100%', marginBottom: '20px', padding: '10px' }}
+            />
+            <select
+              value={etapaSeleccionada}
+              onChange={(e) => setEtapaSeleccionada(e.target.value)}
+              style={{ width: '100%', padding: '10px', marginBottom: '20px' }}
+            >
+              <option value="">Seleccione la etapa</option>
               {etapasProyecto.map((etapa, idx) => (
                 <option key={idx} value={etapa}>{etapa}</option>
               ))}
             </select>
+            <button
+              onClick={() => {}}
+              style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '12px 20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              Comenzar evaluación
+            </button>
           </>
         ) : (
           <>
-            <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
-              Riesgos para la etapa: {etapaSeleccionada}
-            </h2>
+            <h2 style={{ marginBottom: '20px' }}>Riesgos para la etapa: {etapaSeleccionada}</h2>
             {riesgos.map((riesgo, index) => (
               <details key={index} style={{ marginBottom: '25px' }}>
-                <summary style={{ fontWeight: 'bold', marginBottom: '10px' }}>{riesgo}</summary>
+                <summary style={{ fontWeight: 'bold' }}>{riesgo}</summary>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '10px' }}>
                   <div>
                     <label>Impacto (1–5):</label><br />
