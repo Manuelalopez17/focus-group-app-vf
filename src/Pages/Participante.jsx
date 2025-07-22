@@ -9,13 +9,13 @@ export default function Participante() {
   const sesion = new URLSearchParams(search).get('sesion') || ''
   const email  = new URLSearchParams(search).get('email') || ''
 
+  // mapeo sesión → índice de etapa
   const sesionesOrden = ['1.1','1.2','2.1','2.2']
   const etapasProyecto = [
-    'Abastecimiento','Prefactibilidad y Factibilidad','Planeación',
-    'Contratación y Adquisición','Diseño','Fabricación',
-    'Logística y Transporte','Montaje','Construcción',
-    'Puesta en Marcha','Disposición Final'
+    'Abastecimiento','Prefactibilidad y Factibilidad','Planeación','Contratación y Adquisición',
+    'Diseño','Fabricación','Logística y Transporte','Montaje','Construcción','Puesta en Marcha','Disposición Final'
   ]
+  // riesgos por etapa (completo)
   const riesgosPorEtapa = {
     Abastecimiento: [
       'Demora en entrega de materiales por parte del proveedor',
@@ -74,14 +74,18 @@ export default function Participante() {
     ],
   }
 
-  const idx = sesionesOrden.indexOf(sesion)
+  // determinamos la etapa según la sesión
+  const idx   = sesionesOrden.indexOf(sesion)
   const etapa = idx >= 0 ? etapasProyecto[idx] : ''
+
   const [respuestas, setRespuestas] = useState({})
 
+  // si no hay email, redirige a /home
   useEffect(() => {
-    if (!email) nav(`/home`, { replace: true })
+    if (!email) nav('/home', { replace: true })
   }, [email, nav])
 
+  // captura inputs numéricos
   const handleChange = (i, field, v) => {
     const value = Number(v)
     setRespuestas(prev => {
@@ -97,6 +101,7 @@ export default function Participante() {
     })
   }
 
+  // captura checkboxes de sesiones 2.x
   const handleCheckbox = (i, ep) => {
     setRespuestas(prev => {
       const c = { ...prev }
@@ -109,6 +114,7 @@ export default function Participante() {
     })
   }
 
+  // envío de respuestas
   const handleSubmit = async () => {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
@@ -138,18 +144,12 @@ export default function Participante() {
       .insert(inserts)
 
     if (error) {
-      // si es violación de única (duplicate), tratamos como éxito
-      if (error.code === '23505' || error.message.includes('duplicate')) {
-        alert('Respuestas enviadas exitosamente.')
-        nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
-        return
-      }
       console.error(error)
       alert('Error al guardar. Revisa consola.')
       return
     }
 
-    alert('Respuestas enviadas exitosamente.')
+    alert('¡Respuestas enviadas exitosamente!')
     nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
   }
 
@@ -200,9 +200,9 @@ export default function Participante() {
             <p>Marca las etapas afectadas por cada riesgo</p>
             <div style={styles.matrix}>
               <div style={styles.headerRow}>
-                <div>Riesgo</div>
+                <div style={styles.headerCell}>Riesgo</div>
                 {etapasProyecto.map(ep => (
-                  <div key={ep} style={styles.headerCell}>{ep}</div>
+                  <div key={ep} style={styles.headerCellRotated}>{ep}</div>
                 ))}
               </div>
               {riesgos.map((r, i) => (
@@ -232,47 +232,51 @@ export default function Participante() {
 
 const styles = {
   container: {
-    minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
+    minHeight:'100vh',
+    display:'flex', alignItems:'center', justifyContent:'center',
     backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
-    fontFamily:`'Poppins', sans-serif`
+    fontFamily:`'Poppins', sans-serif'`
   },
   card: {
-    background:'rgba(255,255,255,0.9)', padding:'40px',
-    borderRadius:'12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
-    width:'90%', maxWidth:'900px'
+    background:'rgba(255,255,255,0.95)', padding:'30px',
+    borderRadius:'12px', boxShadow:'0 4px 20px rgba(0,0,0,0.1)',
+    width:'95%', maxWidth:'1100px'
   },
   riskRow: {
     display:'flex', alignItems:'flex-start', gap:'12px', margin:'12px 0'
   },
-  riskLabel: { flex:'1 1 200px' },
+  riskLabel: { flex:'1 1 220px', lineHeight:1.4 },
   inputGroup: {
-    display:'flex', gap:'12px', alignItems:'center'
+    display:'flex', gap:'20px', alignItems:'center'
   },
   label: {
-    display:'flex', flexDirection:'column', fontSize:'14px'
+    display:'flex', flexDirection:'column', fontSize:'14px', textAlign:'center'
   },
   small: { width:'60px', padding:'4px' },
-  matrix: { overflowX:'auto', margin:'16px 0' },
+  matrix: {
+    overflowX:'auto', margin:'16px 0', paddingBottom:'8px'
+  },
   headerRow: {
     display:'grid',
-    gridTemplateColumns:'200px repeat(11,80px)',
-    textAlign:'center',
-    fontWeight:600
+    gridTemplateColumns:'200px repeat(11,80px)',   // <-- columnas más estrechas
+    alignItems:'end'
   },
   headerCell: {
-    padding:'8px', whiteSpace:'nowrap',
-    transform:'rotate(-45deg)',
-    transformOrigin:'bottom left',
-    height:'80px'
+    padding:'8px', fontWeight:600, whiteSpace:'nowrap'
+  },
+  headerCellRotated: {
+    padding:'8px', fontWeight:600, whiteSpace:'nowrap',
+    transform:'rotate(-60deg)', transformOrigin:'bottom center',
+    height:'80px', width:'80px', textAlign:'center'
   },
   matrixRow: {
     display:'grid',
     gridTemplateColumns:'200px repeat(11,80px)',
-    alignItems:'center'
+    alignItems:'center', marginTop:'8px'
   },
   cell: { textAlign:'center' },
   button: {
-    marginTop:20, padding:'12px 20px', background:'#007bff',
+    marginTop:20, padding:'12px 25px', background:'#007bff',
     color:'#fff', border:'none', borderRadius:6, cursor:'pointer',
     fontSize:16
   }
