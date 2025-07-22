@@ -9,22 +9,13 @@ export default function Participante() {
   const sesion = new URLSearchParams(search).get('sesion') || ''
   const email  = new URLSearchParams(search).get('email') || ''
 
-  // mapping sesión → índice de etapa
   const sesionesOrden = ['1.1','1.2','2.1','2.2']
   const etapasProyecto = [
-    'Abastecimiento',
-    'Prefactibilidad y Factibilidad',
-    'Planeación',
-    'Contratación y Adquisición',
-    'Diseño',
-    'Fabricación',
-    'Logística y Transporte',
-    'Montaje',
-    'Construcción',
-    'Puesta en Marcha',
-    'Disposición Final'
+    'Abastecimiento','Prefactibilidad y Factibilidad','Planeación',
+    'Contratación y Adquisición','Diseño','Fabricación',
+    'Logística y Transporte','Montaje','Construcción',
+    'Puesta en Marcha','Disposición Final'
   ]
-  // Riesgos por etapa (completo)
   const riesgosPorEtapa = {
     Abastecimiento: [
       'Demora en entrega de materiales por parte del proveedor',
@@ -83,20 +74,14 @@ export default function Participante() {
     ],
   }
 
-  // etapa deducida de la sesión
   const idx = sesionesOrden.indexOf(sesion)
   const etapa = idx >= 0 ? etapasProyecto[idx] : ''
-
   const [respuestas, setRespuestas] = useState({})
 
-  // si no hay email válido → home
   useEffect(() => {
-    if (!email) {
-      nav(`/home`, { replace: true })
-    }
+    if (!email) nav(`/home`, { replace: true })
   }, [email, nav])
 
-  // manejar inputs numéricos
   const handleChange = (i, field, v) => {
     const value = Number(v)
     setRespuestas(prev => {
@@ -112,7 +97,6 @@ export default function Participante() {
     })
   }
 
-  // manejar checkboxes sesiones 2.x
   const handleCheckbox = (i, ep) => {
     setRespuestas(prev => {
       const c = { ...prev }
@@ -125,12 +109,10 @@ export default function Participante() {
     })
   }
 
-  // enviar todo
   const handleSubmit = async () => {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      // 🔑 renombrado a `expert_email`
       const base = { sesion, etapa, riesgo: r, expert_email: email }
       if (sesion.startsWith('1.')) {
         const imp = resp.impacto || 0
@@ -156,10 +138,18 @@ export default function Participante() {
       .insert(inserts)
 
     if (error) {
+      // si es violación de única (duplicate), tratamos como éxito
+      if (error.code === '23505' || error.message.includes('duplicate')) {
+        alert('Respuestas enviadas exitosamente.')
+        nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
+        return
+      }
       console.error(error)
       alert('Error al guardar. Revisa consola.')
       return
     }
+
+    alert('Respuestas enviadas exitosamente.')
     nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
   }
 
@@ -242,8 +232,7 @@ export default function Participante() {
 
 const styles = {
   container: {
-    minHeight:'100vh',
-    display:'flex', alignItems:'center', justifyContent:'center',
+    minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
     backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
     fontFamily:`'Poppins', sans-serif`
   },
@@ -266,13 +255,19 @@ const styles = {
   matrix: { overflowX:'auto', margin:'16px 0' },
   headerRow: {
     display:'grid',
-    gridTemplateColumns:'200px repeat(11,120px)',
-    textAlign:'center', fontWeight:600
+    gridTemplateColumns:'200px repeat(11,80px)',
+    textAlign:'center',
+    fontWeight:600
   },
-  headerCell: { padding:'8px', whiteSpace:'nowrap' },
+  headerCell: {
+    padding:'8px', whiteSpace:'nowrap',
+    transform:'rotate(-45deg)',
+    transformOrigin:'bottom left',
+    height:'80px'
+  },
   matrixRow: {
     display:'grid',
-    gridTemplateColumns:'200px repeat(11,120px)',
+    gridTemplateColumns:'200px repeat(11,80px)',
     alignItems:'center'
   },
   cell: { textAlign:'center' },
