@@ -7,6 +7,9 @@ export default function Home() {
   const { search } = useLocation()
   const email = new URLSearchParams(search).get('email') || ''
 
+  // ➊ Lista de sesiones ahora con 3.1 y 3.2
+  const sesiones = ['1.1','1.2','2.1','2.2','3.1','3.2']
+
   const etapasProyecto = [
     'Abastecimiento',
     'Prefactibilidad y Factibilidad',
@@ -32,7 +35,10 @@ export default function Home() {
       alert('Por favor selecciona tu área de experiencia')
       return
     }
-    navigate(`/participante?sesion=${sesion}&email=${encodeURIComponent(email)}`, { replace: false })
+    navigate(
+      `/participante?sesion=${sesion}&email=${encodeURIComponent(email)}&etapa=${encodeURIComponent(etapa)}`,
+      { replace: false }
+    )
   }
 
   return (
@@ -51,10 +57,15 @@ export default function Home() {
           ))}
         </select>
         <div style={styles.buttons}>
-          <button style={styles.button} onClick={() => startSession('1.1')}>Sesión 1.1</button>
-          <button style={styles.button} onClick={() => startSession('1.2')}>Sesión 1.2</button>
-          <button style={styles.button} onClick={() => startSession('2.1')}>Sesión 2.1</button>
-          <button style={styles.button} onClick={() => startSession('2.2')}>Sesión 2.2</button>
+          {sesiones.map(s => (
+            <button
+              key={s}
+              style={styles.button}
+              onClick={() => startSession(s)}
+            >
+              Sesión {s}
+            </button>
+          ))}
         </div>
       </div>
     </div>
