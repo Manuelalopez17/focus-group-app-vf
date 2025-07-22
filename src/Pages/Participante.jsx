@@ -4,38 +4,85 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
 export default function Participante() {
-  const nav    = useNavigate()
+  const nav = useNavigate()
   const { search } = useLocation()
   const sesion = new URLSearchParams(search).get('sesion') || ''
-  const email  = new URLSearchParams(search).get('email')   || ''
+  const email = new URLSearchParams(search).get('email') || ''
 
   const sesionesOrden = ['1.1','1.2','2.1','2.2']
   const etapasProyecto = [
-    'Abastecimiento','Prefactibilidad y Factibilidad','Planeación','Contratación y Adquisición',
-    'Diseño','Fabricación','Logística y Transporte','Montaje','Construcción','Puesta en Marcha','Disposición Final'
+    'Abastecimiento',
+    'Prefactibilidad y Factibilidad',
+    'Planeación',
+    'Contratación y Adquisición',
+    'Diseño',
+    'Fabricación',
+    'Logística y Transporte',
+    'Montaje',
+    'Construcción',
+    'Puesta en Marcha',
+    'Disposición Final'
   ]
-
   const riesgosPorEtapa = {
     Abastecimiento: [
       'Demora en entrega de materiales por parte del proveedor',
       'Recepción de materiales con especificaciones incorrectas',
-      'Falta de control de calidad en los insumos adquiridos'
+      'Falta de control de calidad en los insumos adquiridos',
     ],
-    'Prefactibilidad y Factibilidad': [/* ... */],
-    Planeación: [/* ... */],
-    'Contratación y Adquisición': [/* ... */],
-    Diseño: [/* ... */],
-    Fabricación: [/* ... */],
-    'Logística y Transporte': [/* ... */],
-    Montaje: [/* ... */],
-    Construcción: [/* ... */],
-    'Puesta en Marcha': [/* ... */],
-    'Disposición Final': [/* ... */]
+    'Prefactibilidad y Factibilidad': [
+      'Falta de análisis adecuado de viabilidad técnica',
+      'Supuestos económicos erróneos en la factibilidad financiera',
+      'Escasa participación de actores clave en etapa temprana'
+    ],
+    Planeación: [
+      'Errores en la estimación de recursos y tiempos',
+      'No inclusión de contingencias en la planificación',
+      'Cambios constantes en el alcance del proyecto'
+    ],
+    'Contratación y Adquisición': [
+      'Contratación de proveedores sin experiencia en construcción industrializada',
+      'Inadecuada definición de términos contractuales',
+      'Demoras en procesos administrativos de adquisición'
+    ],
+    Diseño: [
+      'Diseño no compatible con procesos industrializados',
+      'Errores en la integración de disciplinas de diseño',
+      'Ausencia de revisión y validación cruzada'
+    ],
+    Fabricación: [
+      'Defectos de fabricación en componentes modulares',
+      'Interrupciones en la cadena de producción',
+      'Falta de control en tolerancias de fabricación'
+    ],
+    'Logística y Transporte': [
+      'Retrasos en la entrega por dificultades logísticas',
+      'Daños en módulos durante el transporte',
+      'Problemas de acceso al sitio de construcción'
+    ],
+    Montaje: [
+      'Descoordinación entre equipos de montaje y logística',
+      'Errores en la secuencia de montaje',
+      'Falta de capacitación en ensamblaje de componentes'
+    ],
+    Construcción: [
+      'Condiciones climáticas adversas afectan avances',
+      'Incompatibilidad entre componentes industrializados y tradicionales',
+      'Riesgos laborales por manipulación de módulos'
+    ],
+    'Puesta en Marcha': [
+      'Fallos en las pruebas de sistemas instalados',
+      'No conformidad con normativas técnicas',
+      'Demoras en aprobaciones regulatorias finales'
+    ],
+    'Disposición Final': [
+      'Falta de planificación para reciclaje de componentes',
+      'Altos costos de disposición de residuos',
+      'Desconocimiento de normativas ambientales aplicables'
+    ],
   }
 
-  const idx   = sesionesOrden.indexOf(sesion)
+  const idx = sesionesOrden.indexOf(sesion)
   const etapa = idx >= 0 ? etapasProyecto[idx] : ''
-  const riesgos = riesgosPorEtapa[etapa] || []
   const [respuestas, setRespuestas] = useState({})
 
   useEffect(() => {
@@ -45,10 +92,10 @@ export default function Participante() {
   const handleChange = (i, field, v) => {
     const value = Number(v)
     setRespuestas(prev => {
-      const c = {...prev}
+      const c = { ...prev }
       c[i] = c[i] || {}
       if (field === 'importancia_impacto') {
-        c[i].importancia_impacto    = value
+        c[i].importancia_impacto = value
         c[i].importancia_frecuencia = 100 - value
       } else {
         c[i][field] = value
@@ -59,7 +106,7 @@ export default function Participante() {
 
   const handleCheckbox = (i, ep) => {
     setRespuestas(prev => {
-      const c = {...prev}
+      const c = { ...prev }
       c[i] = c[i] || {}
       const arr = c[i].etapas_afectadas || []
       c[i].etapas_afectadas = arr.includes(ep)
@@ -70,104 +117,122 @@ export default function Participante() {
   }
 
   const handleSubmit = async () => {
+    const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      const base = { sesion, etapa, riesgo: r, expert_email: email }
+      const base = { sesion, etapa, riesgo: r }
       if (sesion.startsWith('1.')) {
-        const imp    = resp.impacto || 0
-        const frec   = resp.frecuencia || 0
+        const imp = resp.impacto || 0
+        const frec = resp.frecuencia || 0
         const impImp = resp.importancia_impacto || 0
+        const impFrec = resp.importancia_frecuencia || 0
         return {
           ...base,
           impacto: imp,
           frecuencia: frec,
           importancia_impacto: impImp,
-          importancia_frecuencia: 100 - impImp,
+          importancia_frecuencia: impFrec,
           score_base: imp * frec,
-          score_final: imp * (impImp/100) + frec * ((100-impImp)/100)
+          score_final: imp * (impImp/100) + frec * (impFrec/100),
+          experto_email: email
         }
       } else {
-        return {...base, etapas_afectadas: resp.etapas_afectadas || []}
+        return {
+          ...base,
+          etapas_afectadas: resp.etapas_afectadas || [],
+          experto_email: email
+        }
       }
     })
-    const { error } = await supabase.from('focus-group-db').insert(inserts)
-    if (error) { alert('Error al guardar. Revisa consola.'); return }
+
+    const { error } = await supabase
+      .from('focus-group-db')
+      .insert(inserts)
+
+    if (error) {
+      console.error(error)
+      alert(`Error al guardar: ${error.message}`)
+      return
+    }
     alert('Respuestas enviadas exitosamente.')
     nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
   }
+
+  const riesgos = riesgosPorEtapa[etapa] || []
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h2>Sesión {sesion} – Etapa: {etapa}</h2>
-        {sesion.startsWith('1.')
-          ? (
-            <> {/* 1.x */}
-              <p>Califica cada riesgo usando estas escalas:</p>
-              {riesgos.map((r, i) => (
-                <div key={i} style={styles.riskRow}>
-                  <div style={styles.riskLabel}>{r}</div>
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>
-                      Impacto (1–5)
-                      <input
-                        type="number" min="1" max="5"
-                        style={styles.small}
-                        onChange={e => handleChange(i, 'impacto', e.target.value)}
-                      />
-                    </label>
-                    <label style={styles.label}>
-                      Frecuencia (1–5)
-                      <input
-                        type="number" min="1" max="5"
-                        style={styles.small}
-                        onChange={e => handleChange(i, 'frecuencia', e.target.value)}
-                      />
-                    </label>
-                    <label style={styles.label}>
-                      % Imp. (0–100)
-                      <input
-                        type="number" min="0" max="100"
-                        style={styles.small}
-                        onChange={e => handleChange(i, 'importancia_impacto', e.target.value)}
-                      />
-                    </label>
-                  </div>
+
+        {sesion.startsWith('1.') ? (
+          <>
+            <p>Califica cada riesgo usando estas escalas:</p>
+            {riesgos.map((r, i) => (
+              <div key={i} style={styles.riskRow}>
+                <div style={styles.riskLabel}>{r}</div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>
+                    Impacto (1–5)
+                    <input
+                      type="number" min="1" max="5"
+                      style={styles.small}
+                      onChange={e => handleChange(i, 'impacto', e.target.value)}
+                    />
+                  </label>
+                  <label style={styles.label}>
+                    Frecuencia (1–5)
+                    <input
+                      type="number" min="1" max="5"
+                      style={styles.small}
+                      onChange={e => handleChange(i, 'frecuencia', e.target.value)}
+                    />
+                  </label>
+                  <label style={styles.label}>
+                    % de importancia de impacto (0–100)
+                    <input
+                      type="number" min="0" max="100"
+                      style={styles.small}
+                      onChange={e => handleChange(i, 'importancia_impacto', e.target.value)}
+                    />
+                  </label>
                 </div>
-              ))}
-            </>
-          ) : (
-            <> {/* 2.x */}
-              <p>Marca las etapas afectadas por cada riesgo</p>
-              <div style={styles.tableWrapper}>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.th}>Riesgo</th>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <p>Marca las etapas afectadas por cada riesgo</p>
+            <div style={{ overflowX: 'auto', margin: '16px 0' }}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Riesgo</th>
+                    {etapasProyecto.map(ep => (
+                      <th key={ep} style={styles.thRotated}>{ep}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {riesgos.map((r, i) => (
+                    <tr key={i}>
+                      <td style={styles.td}>{r}</td>
                       {etapasProyecto.map(ep => (
-                        <th key={ep} style={styles.thRotated}>{ep}</th>
+                        <td key={ep} style={styles.tdCenter}>
+                          <input
+                            type="checkbox"
+                            onChange={() => handleCheckbox(i, ep)}
+                          />
+                        </td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {riesgos.map((r, i) => (
-                      <tr key={i}>
-                        <td style={styles.td}>{r}</td>
-                        {etapasProyecto.map(ep => (
-                          <td key={ep} style={styles.tdCenter}>
-                            <input
-                              type="checkbox"
-                              onChange={() => handleCheckbox(i, ep)}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
         <button style={styles.button} onClick={handleSubmit}>
           Enviar y terminar
         </button>
@@ -178,29 +243,59 @@ export default function Participante() {
 
 const styles = {
   container: {
-    minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
-    backgroundImage:'url("/proyecto.png")', backgroundSize:'cover', fontFamily:"'Poppins', sans-serif"
+    minHeight:'100vh',
+    display:'flex', alignItems:'center', justifyContent:'center',
+    backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
+    fontFamily:`'Poppins', sans-serif`, padding: '20px'
   },
   card: {
-    background:'rgba(255,255,255,0.95)', padding:'40px', borderRadius:'12px',
-    boxShadow:'0 4px 12px rgba(0,0,0,0.1)', width:'95%', maxWidth:'1200px'
+    background:'rgba(255,255,255,0.9)', padding:'30px',
+    borderRadius:'12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
+    width:'90%', maxWidth:'1000px'
   },
-  riskRow: { display:'flex', alignItems:'flex-start', gap:'12px', margin:'16px 0' },
-  riskLabel: { flex:'1 1 250px', fontSize:'14px', lineHeight:1.3 },
-  inputGroup: { display:'flex', gap:'16px' },
-  label: { display:'flex', flexDirection:'column', fontSize:'12px' },
-  small: { width:'50px', padding:'4px', fontSize:'12px' },
-
-  tableWrapper: { overflowX:'auto', margin:'16px 0', border:'1px solid #ccc' },
-  table: { width:'100%', borderCollapse:'collapse', fontSize:'12px' },
-  th: { border:'1px solid #ccc', padding:'8px', background:'#f5f5f5', fontSize:'12px' },
+  riskRow: {
+    display:'flex', alignItems:'flex-start', gap:'12px', margin:'16px 0'
+  },
+  riskLabel: {
+    flex:'1 1 200px',
+    fontSize:'14px',
+    lineHeight:'1.3'
+  },
+  inputGroup: {
+    display:'flex', gap:'16px', alignItems:'flex-start'
+  },
+  label: {
+    display:'flex', flexDirection:'column',
+    fontSize:'12px', lineHeight:'1.2'
+  },
+  small: {
+    width:'50px', padding:'4px', marginTop:'4px'
+  },
+  table: {
+    width:'100%',
+    borderCollapse:'collapse',
+    fontSize:'12px'
+  },
+  th: {
+    border:'1px solid #ccc', padding:'8px',
+    background:'#f0f0f0', textAlign:'left', whiteSpace:'nowrap'
+  },
   thRotated: {
-    border:'1px solid #ccc', padding:'8px', fontSize:'10px',
-    transform:'rotate(-45deg)', transformOrigin:'bottom center',
-    whiteSpace:'normal', verticalAlign:'bottom', paddingBottom:'30px'
+    border:'1px solid #ccc', padding:'8px', whiteSpace:'nowrap',
+    transform:'rotate(-45deg)', transformOrigin:'center center',
+    paddingBottom:'40px', verticalAlign:'bottom'
   },
-  td: { border:'1px solid #ccc', padding:'8px', fontSize:'12px', whiteSpace:'normal', wordBreak:'break-word' },
-  tdCenter: { border:'1px solid #ccc', padding:'8px', textAlign:'center' },
-
-  button: { marginTop:'24px', padding:'12px 24px', background:'#007bff', color:'#fff', border:'none', borderRadius:'6px', cursor:'pointer', fontSize:'16px' }
+  td: {
+    border:'1px solid #ccc', padding:'6px',
+    verticalAlign:'top', whiteSpace:'normal'
+  },
+  tdCenter: {
+    border:'1px solid #ccc', padding:'6px',
+    textAlign:'center'
+  },
+  button: {
+    marginTop:'24px', padding:'12px 24px',
+    background:'#007bff', color:'#fff', border:'none',
+    borderRadius:'6px', cursor:'pointer', fontSize:'14px'
+  }
 }

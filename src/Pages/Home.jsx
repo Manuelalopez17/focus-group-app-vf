@@ -1,49 +1,60 @@
+// src/Pages/Home.jsx
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Home() {
-  const nav = useNavigate()
+  const navigate = useNavigate()
   const { search } = useLocation()
   const email = new URLSearchParams(search).get('email') || ''
-  const [inputEmail, setInputEmail] = useState('')
+
+  const etapasProyecto = [
+    'Abastecimiento',
+    'Prefactibilidad y Factibilidad',
+    'Planeación',
+    'Contratación y Adquisición',
+    'Diseño',
+    'Fabricación',
+    'Logística y Transporte',
+    'Montaje',
+    'Construcción',
+    'Puesta en Marcha',
+    'Disposición Final'
+  ]
+
+  const [etapa, setEtapa] = useState('')
 
   useEffect(() => {
-    if (email) setInputEmail(email)
-  }, [email])
+    if (!email) navigate('/presentacion', { replace: true })
+  }, [email, navigate])
 
-  const sesiones = ['1.1','1.2','2.1','2.2']
-
-  const handleGo = () => {
-    if (!inputEmail.trim()) return
-    nav(`/home?email=${encodeURIComponent(inputEmail)}`, { replace: true })
-  }
-
-  if (!email) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h1>Identifícate</h1>
-          <p>Ingresa tu correo para continuar</p>
-          <input style={styles.input} type="email" placeholder="Correo electrónico" value={inputEmail} onChange={e=>setInputEmail(e.target.value)} />
-          <button style={{...styles.button, opacity: inputEmail.trim()?1:0.5}} disabled={!inputEmail.trim()} onClick={handleGo}>
-            Continuar
-          </button>
-        </div>
-      </div>
-    )
+  const startSession = sesion => {
+    if (!etapa) {
+      alert('Por favor selecciona tu área de experiencia')
+      return
+    }
+    navigate(`/participante?sesion=${sesion}&email=${encodeURIComponent(email)}`, { replace: false })
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1>Focus Group</h1>
-        <p>Selecciona la sesión para comenzar</p>
-        <div style={styles.buttons}>
-          {sesiones.map(s => (
-            <button key={s} style={styles.button} onClick={()=>nav(`/participante?sesion=${s}&email=${encodeURIComponent(email)}`)}>
-              Sesión {s}
-            </button>
+        <h2>Bienvenido, <strong>{email}</strong></h2>
+        <p>Selecciona tu área de experiencia:</p>
+        <select
+          style={styles.input}
+          value={etapa}
+          onChange={e => setEtapa(e.target.value)}
+        >
+          <option value="">-- Selecciona etapa --</option>
+          {etapasProyecto.map(ep => (
+            <option key={ep} value={ep}>{ep}</option>
           ))}
+        </select>
+        <div style={styles.buttons}>
+          <button style={styles.button} onClick={() => startSession('1.1')}>Sesión 1.1</button>
+          <button style={styles.button} onClick={() => startSession('1.2')}>Sesión 1.2</button>
+          <button style={styles.button} onClick={() => startSession('2.1')}>Sesión 2.1</button>
+          <button style={styles.button} onClick={() => startSession('2.2')}>Sesión 2.2</button>
         </div>
       </div>
     </div>
@@ -52,14 +63,34 @@ export default function Home() {
 
 const styles = {
   container: {
-    minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
-    backgroundImage:'url("/proyecto.png")', backgroundSize:'cover', fontFamily:"'Poppins', sans-serif'"
+    minHeight: '100vh',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    backgroundImage: 'url("/proyecto.png")', backgroundSize: 'cover',
+    fontFamily: `'Poppins', sans-serif`, padding: '20px'
   },
   card: {
-    background:'rgba(255,255,255,0.9)', padding:'40px', borderRadius:'12px',
-    boxShadow:'0 4px 12px rgba(0,0,0,0.1)', textAlign:'center', width:'100%', maxWidth:'400px'
+    background: 'rgba(255,255,255,0.9)',
+    padding: '30px',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    width: '100%', maxWidth: '500px',
+    textAlign: 'center'
   },
-  input: { width:'100%', padding:'10px', margin:'8px 0', borderRadius:'6px', border:'1px solid #ccc' },
-  button: { padding:'12px 20px', background:'#007bff', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize:'16px' },
-  buttons: { display:'flex', flexWrap:'wrap', gap:'12px', justifyContent:'center', marginTop:'16px' }
+  input: {
+    width: '100%', padding: '10px', margin: '12px 0',
+    borderRadius: '6px', border: '1px solid #ccc'
+  },
+  buttons: {
+    display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center'
+  },
+  button: {
+    flex: '1 1 100px',
+    padding: '10px 0',
+    background: '#007bff',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px'
+  }
 }
