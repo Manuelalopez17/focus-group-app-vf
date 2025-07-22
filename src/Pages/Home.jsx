@@ -36,7 +36,9 @@ export default function Home() {
       return
     }
     navigate(
-      `/participante?sesion=${sesion}&email=${encodeURIComponent(email)}&etapa=${encodeURIComponent(etapa)}`,
+      `/participante?sesion=${sesion}` +
+      `&email=${encodeURIComponent(email)}` +
+      `&etapa=${encodeURIComponent(etapa)}`,
       { replace: false }
     )
   }
