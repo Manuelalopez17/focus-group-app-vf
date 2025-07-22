@@ -14,7 +14,7 @@ export default function Participante() {
     'Diseño','Fabricación','Logística y Transporte','Montaje','Construcción','Puesta en Marcha','Disposición Final'
   ]
 
-  // Aquí debes copiar TODOS los riesgos para cada etapa:
+  // Mapea aquí TODOS los riesgos por etapa
   const riesgosPorEtapa = {
     Abastecimiento: [
       'Demora en entrega de materiales por parte del proveedor',
@@ -22,24 +22,27 @@ export default function Participante() {
       'Falta de control de calidad en los insumos adquiridos',
     ],
     'Prefactibilidad y Factibilidad': [
-      /* tus riesgos aquí... */
+      'Riesgo A', 'Riesgo B', 'Riesgo C'
     ],
-    Planeación: [ /* ... */ ],
-    'Contratación y Adquisición': [ /* ... */ ],
-    Diseño: [ /* ... */ ],
-    Fabricación: [ /* ... */ ],
-    'Logística y Transporte': [ /* ... */ ],
-    Montaje: [ /* ... */ ],
-    Construcción: [ /* ... */ ],
-    'Puesta en Marcha': [ /* ... */ ],
-    'Disposición Final': [ /* ... */ ],
+    Planeación: [
+      'Riesgo D', 'Riesgo E', 'Riesgo F'
+    ],
+    'Contratación y Adquisición': [
+      'Riesgo G', 'Riesgo H', 'Riesgo I'
+    ],
+    Diseño: ['Riesgo J','Riesgo K','Riesgo L'],
+    Fabricación: ['Riesgo M','Riesgo N','Riesgo O'],
+    'Logística y Transporte': ['Riesgo P','Riesgo Q','Riesgo R'],
+    Montaje: ['Riesgo S','Riesgo T','Riesgo U'],
+    Construcción: ['Riesgo V','Riesgo W','Riesgo X'],
+    'Puesta en Marcha': ['Riesgo Y','Riesgo Z','Riesgo AA'],
+    'Disposición Final': ['Riesgo BB','Riesgo CC','Riesgo DD'],
   }
 
   const [etapa, setEtapa] = useState('')
   const [mostrar, setMostrar] = useState(false)
   const [respuestas, setRespuestas] = useState({})
 
-  // Si no hay email en la URL, redirijo al home de login por correo
   useEffect(()=>{
     if (!email) nav(`/home`, { replace:true })
   },[email, nav])
@@ -68,7 +71,7 @@ export default function Participante() {
       const copy = {...prev}
       copy[idx] = copy[idx] || {}
       const arr = copy[idx].etapas_afectadas || []
-      copy[idx].etapas_afectadas = 
+      copy[idx].etapas_afectadas =
         arr.includes(ep) ? arr.filter(e => e !== ep) : [...arr, ep]
       return copy
     })
@@ -95,15 +98,13 @@ export default function Participante() {
         return { ...base, etapas_afectadas: resp.etapas_afectadas || [] }
       }
     })
-    const { error } = await supabase
-      .from('focus-group-db')
-      .insert(inserts)
+
+    const { error } = await supabase.from('focus-group-db').insert(inserts)
     if (error) {
       console.error(error)
       alert('Error guardando respuestas. Revisa consola.')
       return
     }
-    // de vuelta al home pero pasando el email para login
     nav(`/home?email=${encodeURIComponent(email)}`, { replace:true })
   }
 
@@ -126,7 +127,7 @@ export default function Participante() {
               ))}
             </select>
             <button
-              style={{...styles.button, opacity: etapa?1:0.5}}
+              style={{ ...styles.button, opacity: etapa?1:0.5 }}
               disabled={!etapa}
               onClick={start}
             >Comenzar</button>
@@ -221,7 +222,7 @@ const styles = {
     display:'grid', gridTemplateColumns:'200px repeat(11,120px)',
     textAlign:'center', fontWeight:'600'
   },
-  headerCell: { padding:'8px' },
+  headerCell: { padding:'8px', transform: 'rotate(-30deg)', whiteSpace:'nowrap' },
   matrixRow: {
     display:'grid', gridTemplateColumns:'200px repeat(11,120px)',
     alignItems:'center'
