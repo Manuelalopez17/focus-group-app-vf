@@ -1,3 +1,4 @@
+// src/Pages/Participante.jsx
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
@@ -119,7 +120,7 @@ export default function Participante() {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      const base = { sesion, etapa, riesgo: r, experto_email: email }
+      const base = { sesion, etapa, riesgo: r, expert_email: email }
       if (sesion.startsWith('1.')) {
         const imp = resp.impacto || 0
         const frec = resp.frecuencia || 0
@@ -160,6 +161,7 @@ export default function Participante() {
       <div style={styles.card}>
         <h2>Sesión {sesion} – Etapa: {etapa}</h2>
 
+        {/* SESIONES 1.x */}
         {sesion.startsWith('1.') ? (
           <>
             <p>Califica cada riesgo usando estas escalas:</p>
@@ -196,15 +198,16 @@ export default function Participante() {
             ))}
           </>
         ) : (
+          /* SESIONES 2.x */
           <>
             <p>Marca las etapas afectadas por cada riesgo</p>
-            <div style={{ overflowX: 'auto', margin: '16px 0' }}>
+            <div style={styles.tableWrapper}>
               <table style={styles.table}>
                 <thead>
                   <tr>
                     <th style={styles.th}>Riesgo</th>
                     {etapasProyecto.map(ep => (
-                      <th key={ep} style={styles.thVertical}>{ep}</th>
+                      <th key={ep} style={styles.thDiagonal}>{ep}</th>
                     ))}
                   </tr>
                 </thead>
@@ -255,25 +258,33 @@ const styles = {
   inputGroup: { display:'flex', gap:'16px', alignItems:'center' },
   label: { display:'flex', flexDirection:'column', fontSize:'12px' },
   small: { width:'60px', padding:'4px' },
+
+  tableWrapper: {
+    overflowX:'auto',
+    margin:'16px 0'
+  },
   table: {
-    width:'100%',
     borderCollapse:'collapse',
+    width:'100%',
     fontSize:'12px'
   },
   th: {
     border:'1px solid #ccc', padding:'8px',
-    background:'#f0f0f0', textAlign:'left', whiteSpace:'nowrap'
+    background:'#f0f0f0', textAlign:'left', verticalAlign:'bottom'
   },
-  thVertical: {
+  thDiagonal: {
     border:'1px solid #ccc',
-    padding:'6px',
-    width:'40px',
-    writingMode:'vertical-rl',
-    textOrientation:'upright',
-    textAlign:'center',
-    background:'#f0f0f0',
-    fontSize:'11px',
-    whiteSpace:'normal'
+    width:'40px', height:'120px',
+    padding:'0',
+    position:'relative'
+  },
+  thDiagonalInner: {
+    position:'absolute',
+    bottom:'4px', left:'50%',
+    transform:'translateX(-50%) rotate(-45deg)',
+    transformOrigin:'bottom left',
+    whiteSpace:'nowrap',
+    fontSize:'11px'
   },
   td: {
     border:'1px solid #ccc',
