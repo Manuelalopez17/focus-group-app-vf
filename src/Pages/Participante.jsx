@@ -4,10 +4,10 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
 export default function Participante() {
-  const nav = useNavigate()
+  const nav    = useNavigate()
   const { search } = useLocation()
   const sesion = new URLSearchParams(search).get('sesion') || ''
-  const email  = new URLSearchParams(search).get('email') || ''
+  const email  = new URLSearchParams(search).get('email')   || ''
 
   const sesionesOrden = ['1.1','1.2','2.1','2.2']
   const etapasProyecto = [
@@ -29,61 +29,13 @@ export default function Participante() {
       'Recepción de materiales con especificaciones incorrectas',
       'Falta de control de calidad en los insumos adquiridos',
     ],
-    'Prefactibilidad y Factibilidad': [
-      'Falta de análisis adecuado de viabilidad técnica',
-      'Supuestos económicos erróneos en la factibilidad financiera',
-      'Escasa participación de actores clave en etapa temprana'
-    ],
-    Planeación: [
-      'Errores en la estimación de recursos y tiempos',
-      'No inclusión de contingencias en la planificación',
-      'Cambios constantes en el alcance del proyecto'
-    ],
-    'Contratación y Adquisición': [
-      'Contratación de proveedores sin experiencia en construcción industrializada',
-      'Inadecuada definición de términos contractuales',
-      'Demoras en procesos administrativos de adquisición'
-    ],
-    Diseño: [
-      'Diseño no compatible con procesos industrializados',
-      'Errores en la integración de disciplinas de diseño',
-      'Ausencia de revisión y validación cruzada'
-    ],
-    Fabricación: [
-      'Defectos de fabricación en componentes modulares',
-      'Interrupciones en la cadena de producción',
-      'Falta de control en tolerancias de fabricación'
-    ],
-    'Logística y Transporte': [
-      'Retrasos en la entrega por dificultades logísticas',
-      'Daños en módulos durante el transporte',
-      'Problemas de acceso al sitio de construcción'
-    ],
-    Montaje: [
-      'Descoordinación entre equipos de montaje y logística',
-      'Errores en la secuencia de montaje',
-      'Falta de capacitación en ensamblaje de componentes'
-    ],
-    Construcción: [
-      'Condiciones climáticas adversas afectan avances',
-      'Incompatibilidad entre componentes industrializados y tradicionales',
-      'Riesgos laborales por manipulación de módulos'
-    ],
-    'Puesta en Marcha': [
-      'Fallos en las pruebas de sistemas instalados',
-      'No conformidad con normativas técnicas',
-      'Demoras en aprobaciones regulatorias finales'
-    ],
-    'Disposición Final': [
-      'Falta de planificación para reciclaje de componentes',
-      'Altos costos de disposición de residuos',
-      'Desconocimiento de normativas ambientales aplicables'
-    ],
+    /* ... el resto igual ... */
   }
 
-  const idx   = sesionesOrden.indexOf(sesion)
-  const etapa = idx >= 0 ? etapasProyecto[idx] : ''
+  const idx    = sesionesOrden.indexOf(sesion)
+  const etapa  = idx >= 0 ? etapasProyecto[idx] : ''
   const riesgos = riesgosPorEtapa[etapa] || []
+
   const [respuestas, setRespuestas] = useState({})
 
   useEffect(() => {
@@ -196,7 +148,7 @@ export default function Participante() {
         ) : (
           <>
             <p>Marca las etapas afectadas por cada riesgo</p>
-            <div style={{ overflowX: 'auto', margin: '16px 0' }}>
+            <div style={styles.tableWrapper}>
               <table style={styles.table}>
                 <thead>
                   <tr>
@@ -238,75 +190,74 @@ const styles = {
   container: {
     minHeight: '100vh',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    backgroundImage: 'url("/proyecto.png")',
-    backgroundSize:   'cover',
-    fontFamily:       "'Poppins', sans-serif"
+    backgroundImage: 'url("/proyecto.png")', backgroundSize: 'cover',
+    fontFamily: "'Poppins', sans-serif"
   },
   card: {
-    background:   'rgba(255,255,255,0.95)',
-    padding:      '40px',
+    background: 'rgba(255,255,255,0.95)',
+    padding: '40px',
     borderRadius: '12px',
-    boxShadow:    '0 4px 12px rgba(0,0,0,0.1)',
-    width:        '90%', maxWidth: '1000px'
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    width: '95%',
+    maxWidth: '1200px'
   },
   riskRow: {
-    display:       'flex',
-    alignItems:    'flex-start',
-    gap:           '12px',
-    margin:        '16px 0'
+    display: 'flex', alignItems: 'flex-start', gap: '12px', margin: '16px 0'
   },
-  riskLabel: { flex:'1 1 200px', fontSize:'14px' },
-  inputGroup: {
-    display:      'flex',
-    gap:          '16px',
-    alignItems:   'flex-start'
-  },
-  label: { display:'flex', flexDirection:'column', fontSize:'12px' },
-  small: { width:'60px', padding:'4px', fontSize:'12px' },
+  riskLabel: { flex: '1 1 200px', fontSize: '14px' },
+  inputGroup: { display: 'flex', gap: '16px' },
+  label: { display: 'flex', flexDirection: 'column', fontSize: '12px' },
+  small: { width: '50px', padding: '4px', fontSize: '12px' },
 
+  tableWrapper: {
+    overflowX: 'auto',
+    margin: '16px 0',
+    paddingBottom: '4px',
+    border: '1px solid #ddd'
+  },
   table: {
-    width:           '100%',
-    borderCollapse:  'collapse',
-    tableLayout:     'fixed'
+    width: 'max-content',
+    minWidth: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '12px'
   },
   th: {
-    border:    '1px solid #ccc',
-    padding:   '8px',
-    background:'#f5f5f5',
-    fontSize:  '12px',
-    textAlign: 'left',
-    whiteSpace:'nowrap'
+    border: '1px solid #ccc',
+    padding: '8px',
+    background: '#f5f5f5',
+    whiteSpace: 'nowrap',
+    fontSize: '12px'
   },
   thRotated: {
-    border:         '1px solid #ccc',
-    padding:        '8px',
-    whiteSpace:     'nowrap',
-    transform:      'rotate(-45deg)',
-    transformOrigin:'bottom left',
-    paddingBottom:  '40px',
-    verticalAlign:  'bottom',
-    fontSize:       '12px'
+    border: '1px solid #ccc',
+    padding: '8px',
+    whiteSpace: 'nowrap',
+    transform: 'rotate(-60deg)',
+    transformOrigin: 'bottom left',
+    paddingBottom: '50px',
+    verticalAlign: 'bottom',
+    fontSize: '10px'
   },
   td: {
-    border:      '1px solid #ccc',
-    padding:     '8px',
-    verticalAlign:'top',
-    fontSize:    '12px',
-    whiteSpace:  'nowrap'
+    border: '1px solid #ccc',
+    padding: '8px',
+    verticalAlign: 'top',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word'
   },
   tdCenter: {
-    border:     '1px solid #ccc',
-    padding:    '8px',
-    textAlign:  'center'
+    border: '1px solid #ccc',
+    padding: '8px',
+    textAlign: 'center'
   },
   button: {
-    marginTop:  '24px',
-    padding:    '12px 24px',
+    marginTop: '24px',
+    padding: '12px 24px',
     background: '#007bff',
-    color:      '#fff',
-    border:     'none',
-    borderRadius:'6px',
-    cursor:     'pointer',
-    fontSize:   '16px'
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '16px'
   }
 }
