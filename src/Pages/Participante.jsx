@@ -130,7 +130,8 @@ export default function Participante() {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      const base = { sesion, etapa, riesgo: r, experto_email: email }
+      // 🔑 renombrado a `expert_email`
+      const base = { sesion, etapa, riesgo: r, expert_email: email }
       if (sesion.startsWith('1.')) {
         const imp = resp.impacto || 0
         const frec = resp.frecuencia || 0
@@ -281,4 +282,5 @@ const styles = {
     fontSize:16
   }
 }
+
 
