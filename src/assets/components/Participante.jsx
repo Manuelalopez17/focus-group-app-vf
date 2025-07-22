@@ -1,12 +1,18 @@
 // src/assets/components/Participante.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 
 export default function Participante() {
   const navigate = useNavigate();
-  const sesionesDisponibles = ['1.1', '1.2', '2.1', '2.2'];
-  const etapasProyecto = [
+  const { search } = useLocation();
+  const sesion = new URLSearchParams(search).get('sesion') || '';
+  const expertEmail = new URLSearchParams(search).get('email') || '';
+
+  const sesiones1 = ['1.1', '1.2'];
+  const sesiones2 = ['2.1', '2.2'];
+
+  const etapas = [
     'Abastecimiento',
     'Prefactibilidad y Factibilidad',
     'Planeación',
@@ -20,148 +26,110 @@ export default function Participante() {
     'Disposición Final'
   ];
 
-  const [sesion, setSesion] = useState('');
   const [etapa, setEtapa] = useState('');
-  const [mostrarFormulario, setMostrarFormulario] = useState(true);
   const [riesgos, setRiesgos] = useState([]);
   const [respuestas, setRespuestas] = useState({});
 
+  // Carga riesgos al elegir etapa
   useEffect(() => {
     if (!etapa) return;
-    const mapRiesgos = {
+    const map = {
       Abastecimiento: [
         'Demora en entrega de materiales por parte del proveedor',
         'Recepción de materiales con especificaciones incorrectas',
         'Falta de control de calidad en los insumos adquiridos'
       ],
-      // …resto de etapas como antes…
+      // … igual para cada etapa …
     };
-    setRiesgos(mapRiesgos[etapa] || []);
+    setRiesgos(map[etapa] || []);
   }, [etapa]);
 
-  const canIniciar = () =>
-    sesionesDisponibles.includes(sesion) && etapa;
-
-  const handleStart = () => {
-    if (canIniciar()) setMostrarFormulario(false);
-  };
-
-  const handleChange = (idx, field, value) => {
-    setRespuestas(prev => {
-      const copy = { ...prev };
-      copy[idx] = copy[idx] || {};
-      if (field === 'importancia_impacto') {
-        const imp = Number(value);
-        copy[idx].importancia_impacto = imp;
-        copy[idx].importancia_frecuencia = 100 - imp;
-      } else if (field === 'importancia_frecuencia') {
-        const frec = Number(value);
-        copy[idx].importancia_frecuencia = frec;
-        copy[idx].importancia_impacto = 100 - frec;
-      } else {
-        copy[idx][field] = Number(value);
-      }
-      if (['1.1','1.2'].includes(sesion)) {
-        const imp = copy[idx].impacto || 0;
-        const frec = copy[idx].frecuencia || 0;
-        const impImp = copy[idx].importancia_impacto || 0;
-        const impFrec = copy[idx].importancia_frecuencia || 0;
-        copy[idx].score_base = (imp * frec).toFixed(2);
-        copy[idx].score_final = (imp*(impImp/100) + frec*(impFrec/100)).toFixed(2);
-      }
-      return copy;
+  // Toggle checkbox en sesiones 2.x
+  const handleCheckbox = (i, col) => {
+    setRespuestas(p => {
+      const c = { ...p };
+      c[i] = c[i] || {};
+      const arr = c[i].etapas_afectadas || [];
+      c[i].etapas_afectadas = arr.includes(col)
+        ? arr.filter(x => x !== col)
+        : [...arr, col];
+      return c;
     });
   };
 
-  const handleCheckbox = (idx, etapaName) => {
-    setRespuestas(prev => {
-      const copy = { ...prev };
-      copy[idx] = copy[idx] || {};
-      const arr = copy[idx].etapas_afectadas || [];
-      copy[idx].etapas_afectadas = arr.includes(etapaName)
-        ? arr.filter(e => e !== etapaName)
-        : [...arr, etapaName];
-      return copy;
-    });
-  };
-
+  // Insert final
   const handleSubmit = async () => {
-    const expertEmail = localStorage.getItem('expertEmail');
-    const payload = riesgos.map((r, i) => {
-      const resp = respuestas[i] || {};
-      const base = {
-        sesion,
-        etapa,
-        riesgo: r,
-        expert_email: expertEmail
-      };
-      const detalle = ['1.1','1.2'].includes(sesion)
-        ? {
-            impacto: resp.impacto || 0,
-            frecuencia: resp.frecuencia || 0,
-            importancia_impacto: resp.importancia_impacto || 0,
-            importancia_frecuencia: resp.importancia_frecuencia || 0,
-            score_base: resp.score_base || 0,
-            score_final: resp.score_final || 0
-          }
-        : { etapas_afectadas: resp.etapas_afectadas || [] };
-      return { ...base, ...detalle };
-    });
+    const payload = riesgos.map((r, i) => ({
+      sesion,
+      etapa,
+      riesgo: r,
+      expert_email: expertEmail,
+      ...(
+        sesiones2.includes(sesion)
+          ? { etapas_afectadas: respuestas[i]?.etapas_afectadas || [] }
+          : {}
+      )
+    }));
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('focus-group-db')
       .insert(payload);
 
     if (error) {
-      console.error('Error al guardar respuestas:', error);
-      alert(`Error guardando respuestas: ${error.message}`);
+      console.error(error);
+      alert('Error al guardar: ' + error.message);
       return;
     }
-
+    alert('¡Respuestas guardadas!');
     navigate('/home', { replace: true });
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        {mostrarFormulario ? (
-          <>
-            <h2>Bienvenido</h2>
-            <select value={sesion} onChange={e => setSesion(e.target.value)}>
-              <option value="">Seleccione sesión</option>
-              {sesionesDisponibles.map(s => <option key={s} value={s}>Sesión {s}</option>)}
-            </select>
-            <select value={etapa} onChange={e => setEtapa(e.target.value)}>
-              <option value="">Seleccione etapa</option>
-              {etapasProyecto.map(ep => <option key={ep} value={ep}>{ep}</option>)}
-            </select>
-            <button disabled={!canIniciar()} onClick={handleStart}>Comenzar evaluación</button>
-          </>
+        <h2>Sesión {sesion} – Etapa: {etapa}</h2>
+        {!etapa ? (
+          <select style={styles.input} value={etapa} onChange={e => setEtapa(e.target.value)}>
+            <option value="">-- Seleccione etapa --</option>
+            {etapas.map(ep => <option key={ep} value={ep}>{ep}</option>)}
+          </select>
+        ) : sesiones1.includes(sesion) ? (
+          <p>(Las sesiones 1.x ya fueron completadas en la página anterior)</p>
         ) : (
-          <>
-            <h2>Sesión {sesion} – Etapa: {etapa}</h2>
-            {riesgos.map((r, i) => (
-              <div key={i} style={{ marginBottom: 16 }}>
-                <strong>{i+1}. {r}</strong>
-                {['1.1','1.2'].includes(sesion) ? (
-                  <div>
-                    Impacto: <input type="number" min="1" max="5" onChange={e => handleChange(i,'impacto',e.target.value)} />
-                    Frecuencia: <input type="number" min="1" max="5" onChange={e => handleChange(i,'frecuencia',e.target.value)} />
-                    %Imp: <input type="number" min="0" max="100" onChange={e => handleChange(i,'importancia_impacto',e.target.value)} />
-                  </div>
-                ) : (
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:12 }}>
-                    {etapasProyecto.map(ep => (
-                      <label key={ep}>
-                        <input type="checkbox" onChange={() => handleCheckbox(i,ep)} /> {ep}
-                      </label>
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th>Riesgo</th>
+                  {etapas.map((ep, j) => (
+                    <th key={j} style={styles.thVertical}>{ep}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {riesgos.map((r, i) => (
+                  <tr key={i}>
+                    <td>{i+1}. {r}</td>
+                    {etapas.map((ep, j) => (
+                      <td key={j}>
+                        <input
+                          type="checkbox"
+                          checked={respuestas[i]?.etapas_afectadas?.includes(ep) || false}
+                          onChange={() => handleCheckbox(i, ep)}
+                        />
+                      </td>
                     ))}
-                  </div>
-                )}
-              </div>
-            ))}
-            <button onClick={handleSubmit}>Enviar y terminar</button>
-          </>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {etapa && sesiones2.includes(sesion) && (
+          <button style={styles.button} onClick={handleSubmit}>
+            Enviar y terminar
+          </button>
         )}
       </div>
     </div>
@@ -170,10 +138,28 @@ export default function Participante() {
 
 const styles = {
   container: {
-    minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
-    backgroundImage:'url("/proyecto.png")', backgroundSize:'cover'
+    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    backgroundImage: 'url("/proyecto.png")', backgroundSize: 'cover'
   },
   card: {
-    background:'rgba(255,255,255,0.9)', padding:24, borderRadius:12, width:'90%', maxWidth:800
+    background: 'rgba(255,255,255,0.9)', padding: 30, borderRadius: 12,
+    width: '95%', maxWidth: 1000
+  },
+  input: {
+    width: '100%', padding: 10, margin: '10px 0', borderRadius: 6, border: '1px solid #ccc'
+  },
+  tableWrapper: {
+    overflowX: 'auto', marginTop: 20
+  },
+  table: {
+    borderCollapse: 'collapse', width: '100%'
+  },
+  thVertical: {
+    writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+    border: '1px solid #ddd', padding: '8px', whiteSpace: 'nowrap', fontSize: 12
+  },
+  button: {
+    marginTop: 20, padding: '12px 24px', background: '#007bff', color: 'white',
+    border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 16
   }
 };
