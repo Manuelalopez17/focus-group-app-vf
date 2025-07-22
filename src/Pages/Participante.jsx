@@ -81,7 +81,12 @@ export default function Participante() {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      const base = { sesion, etapa, riesgo: r, experto_email: email }
+      const base = { 
+        sesion, 
+        etapa, 
+        riesgo: r, 
+        expert_email: email    // <-- aquí el cambio
+      }
       if (sesion.startsWith('1.')) {
         const imp = resp.impacto || 0
         const frec = resp.frecuencia || 0
@@ -121,7 +126,6 @@ export default function Participante() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h2>Sesión {sesion} – Etapa: {etapa}</h2>
-
         {sesion.startsWith('1.') ? (
           <>
             <p>Califica cada riesgo usando estas escalas:</p>
@@ -146,7 +150,7 @@ export default function Participante() {
                     />
                   </label>
                   <label style={styles.label}>
-                    % Importancia (0–100)
+                    % Imp. impacto (0–100)
                     <input
                       type="number" min="0" max="100"
                       style={styles.small}
@@ -189,7 +193,6 @@ export default function Participante() {
             </div>
           </>
         )}
-
         <button style={styles.button} onClick={handleSubmit}>
           Enviar y terminar
         </button>
@@ -203,43 +206,32 @@ const styles = {
     minHeight: '100vh',
     display:'flex', alignItems:'center', justifyContent:'center',
     backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
-    fontFamily: `'Poppins', sans-serif`
+    fontFamily:`'Poppins', sans-serif`
   },
   card: {
-    background: 'rgba(255,255,255,0.9)', padding: '40px',
-    borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    width: '90%', maxWidth: '1000px'
+    background:'rgba(255,255,255,0.9)', padding:'40px',
+    borderRadius:'12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
+    width:'90%', maxWidth:'1000px'
   },
-  riskRow: {
-    display: 'flex', alignItems: 'flex-start', gap: '12px',
-    margin: '16px 0'
-  },
-  riskLabel: { flex: '1 1 200px', fontSize: '14px' },
-  inputGroup: { display: 'flex', gap: '16px', alignItems: 'center' },
+  riskRow: { display:'flex', alignItems:'flex-start', gap:'12px', margin:'16px 0' },
+  riskLabel: { flex:'1 1 200px', fontSize:'14px' },
+  inputGroup: { display:'flex', gap:'16px', alignItems:'center' },
   label: { display:'flex', flexDirection:'column', fontSize:'12px' },
-  small: { width: '60px', padding: '4px' },
-
+  small: { width:'60px', padding:'4px' },
   th: {
-    border: '1px solid #ccc', padding: '8px',
-    background: '#f5f5f5', textAlign: 'left', whiteSpace: 'nowrap'
+    border:'1px solid #ccc', padding:'8px',
+    background:'#f5f5f5', textAlign:'left', whiteSpace:'nowrap'
   },
   thRotated: {
-    border: '1px solid #ccc', padding: '8px', whiteSpace: 'nowrap',
-    transform: 'rotate(-45deg)', transformOrigin: 'bottom left',
-    paddingBottom: '40px', verticalAlign: 'bottom', fontSize: '12px'
+    border:'1px solid #ccc', padding:'8px', whiteSpace:'nowrap',
+    transform:'rotate(-45deg)', transformOrigin:'bottom left',
+    paddingBottom:'40px', verticalAlign:'bottom', fontSize:'12px'
   },
-  td: {
-    border: '1px solid #ccc', padding: '8px', verticalAlign: 'top',
-    whiteSpace: 'nowrap'
-  },
-  tdCenter: {
-    border: '1px solid #ccc', padding: '8px', textAlign: 'center'
-  },
-
+  td:    { border:'1px solid #ccc', padding:'8px', verticalAlign:'top', whiteSpace:'nowrap' },
+  tdCenter: { border:'1px solid #ccc', padding:'8px', textAlign:'center' },
   button: {
-    marginTop: '24px', padding: '12px 24px',
-    background: '#007bff', color: '#fff', border: 'none',
-    borderRadius: '6px', cursor: 'pointer', fontSize: '16px'
+    marginTop:'24px', padding:'12px 24px', background:'#007bff',
+    color:'#fff', border:'none', borderRadius:'6px', cursor:'pointer', fontSize:'16px'
   }
 }
 
