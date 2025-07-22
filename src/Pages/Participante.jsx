@@ -24,7 +24,7 @@ export default function Participante() {
     'Puesta en Marcha',
     'Disposición Final'
   ]
-  // Riesgos por etapa (copia completa)
+  // Riesgos por etapa (completo)
   const riesgosPorEtapa = {
     Abastecimiento: [
       'Demora en entrega de materiales por parte del proveedor',
@@ -168,30 +168,39 @@ export default function Participante() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h2>Sesión {sesion} &ndash; Etapa: {etapa}</h2>
+
         {sesion.startsWith('1.') ? (
           <>
-            <p>Califica Impacto, Frecuencia y % de Impacto</p>
+            <p>Califica cada riesgo usando estas escalas:</p>
             {riesgos.map((r, i) => (
               <div key={i} style={styles.riskRow}>
                 <div style={styles.riskLabel}>{r}</div>
-                <input
-                  type="number" min="1" max="5"
-                  placeholder="Impacto"
-                  style={styles.small}
-                  onChange={e => handleChange(i, 'impacto', e.target.value)}
-                />
-                <input
-                  type="number" min="1" max="5"
-                  placeholder="Frecuencia"
-                  style={styles.small}
-                  onChange={e => handleChange(i, 'frecuencia', e.target.value)}
-                />
-                <input
-                  type="number" min="0" max="100"
-                  placeholder="%Imp"
-                  style={styles.small}
-                  onChange={e => handleChange(i, 'importancia_impacto', e.target.value)}
-                />
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>
+                    Impacto (1–5)
+                    <input
+                      type="number" min="1" max="5"
+                      style={styles.small}
+                      onChange={e => handleChange(i, 'impacto', e.target.value)}
+                    />
+                  </label>
+                  <label style={styles.label}>
+                    Frecuencia (1–5)
+                    <input
+                      type="number" min="1" max="5"
+                      style={styles.small}
+                      onChange={e => handleChange(i, 'frecuencia', e.target.value)}
+                    />
+                  </label>
+                  <label style={styles.label}>
+                    % Importancia (0–100)
+                    <input
+                      type="number" min="0" max="100"
+                      style={styles.small}
+                      onChange={e => handleChange(i, 'importancia_impacto', e.target.value)}
+                    />
+                  </label>
+                </div>
               </div>
             ))}
           </>
@@ -221,6 +230,7 @@ export default function Participante() {
             </div>
           </>
         )}
+
         <button style={styles.button} onClick={handleSubmit}>
           Enviar y terminar
         </button>
@@ -242,9 +252,15 @@ const styles = {
     width:'90%', maxWidth:'900px'
   },
   riskRow: {
-    display:'flex', alignItems:'center', gap:'12px', margin:'12px 0'
+    display:'flex', alignItems:'flex-start', gap:'12px', margin:'12px 0'
   },
   riskLabel: { flex:'1 1 200px' },
+  inputGroup: {
+    display:'flex', gap:'12px', alignItems:'center'
+  },
+  label: {
+    display:'flex', flexDirection:'column', fontSize:'14px'
+  },
   small: { width:'60px', padding:'4px' },
   matrix: { overflowX:'auto', margin:'16px 0' },
   headerRow: {
