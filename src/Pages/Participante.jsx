@@ -24,26 +24,11 @@ export default function Participante() {
     'Disposición Final'
   ]
   const riesgosPorEtapa = {
-    Abastecimiento: [
-      'Demora en entrega de materiales por parte del proveedor',
-      'Recepción de materiales con especificaciones incorrectas',
-      'Falta de control de calidad en los insumos adquiridos',
-    ],
-    'Prefactibilidad y Factibilidad': [ /* ... */ ],
-    Planeación:             [ /* ... */ ],
-    'Contratación y Adquisición': [ /* ... */ ],
-    Diseño:                 [ /* ... */ ],
-    Fabricación:            [ /* ... */ ],
-    'Logística y Transporte':[ /* ... */ ],
-    Montaje:                [ /* ... */ ],
-    Construcción:           [ /* ... */ ],
-    'Puesta en Marcha':     [ /* ... */ ],
-    'Disposición Final':    [ /* ... */ ],
+    /* ...tus riesgos completos por etapa aquí... */
   }
 
   const idx = sesionesOrden.indexOf(sesion)
   const etapa = idx >= 0 ? etapasProyecto[idx] : ''
-
   const [respuestas, setRespuestas] = useState({})
 
   useEffect(() => {
@@ -81,11 +66,11 @@ export default function Participante() {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      const base = { 
-        sesion, 
-        etapa, 
-        riesgo: r, 
-        expert_email: email    // <-- aquí el cambio
+      const base = {
+        sesion,
+        etapa,
+        riesgo: r,
+        expert_email: email        // <-- coincide con tu columna en supabase
       }
       if (sesion.startsWith('1.')) {
         const imp = resp.impacto || 0
@@ -99,7 +84,7 @@ export default function Participante() {
           importancia_impacto: impImp,
           importancia_frecuencia: impFrec,
           score_base: imp * frec,
-          score_final: imp * (impImp/100) + frec * (impFrec/100)
+          score_final: imp*(impImp/100) + frec*(impFrec/100)
         }
       } else {
         return { ...base, etapas_afectadas: resp.etapas_afectadas || [] }
@@ -126,49 +111,22 @@ export default function Participante() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h2>Sesión {sesion} – Etapa: {etapa}</h2>
+
         {sesion.startsWith('1.') ? (
-          <>
-            <p>Califica cada riesgo usando estas escalas:</p>
-            {riesgos.map((r, i) => (
-              <div key={i} style={styles.riskRow}>
-                <div style={styles.riskLabel}>{r}</div>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>
-                    Impacto (1–5)
-                    <input
-                      type="number" min="1" max="5"
-                      style={styles.small}
-                      onChange={e => handleChange(i, 'impacto', e.target.value)}
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    Frecuencia (1–5)
-                    <input
-                      type="number" min="1" max="5"
-                      style={styles.small}
-                      onChange={e => handleChange(i, 'frecuencia', e.target.value)}
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    % Imp. impacto (0–100)
-                    <input
-                      type="number" min="0" max="100"
-                      style={styles.small}
-                      onChange={e => handleChange(i, 'importancia_impacto', e.target.value)}
-                    />
-                  </label>
-                </div>
-              </div>
-            ))}
-          </>
+          /* … tu sección 1.x … */
+          null
         ) : (
           <>
-            <p>Marca las etapas afectadas por cada riesgo</p>
+            <p style={{ fontSize: 14 }}>Marca las etapas afectadas por cada riesgo</p>
             <div style={{ overflowX: 'auto', margin: '16px 0' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                tableLayout: 'fixed'
+              }}>
                 <thead>
                   <tr>
-                    <th style={styles.th}>Riesgo</th>
+                    <th style={styles.thRisk}>Riesgo</th>
                     {etapasProyecto.map(ep => (
                       <th key={ep} style={styles.thRotated}>{ep}</th>
                     ))}
@@ -177,7 +135,7 @@ export default function Participante() {
                 <tbody>
                   {riesgos.map((r, i) => (
                     <tr key={i}>
-                      <td style={styles.td}>{`r${i+1}. ${r}`}</td>
+                      <td style={styles.tdRisk}>{`r${i+1}. ${r}`}</td>
                       {etapasProyecto.map(ep => (
                         <td key={ep} style={styles.tdCenter}>
                           <input
@@ -193,6 +151,7 @@ export default function Participante() {
             </div>
           </>
         )}
+
         <button style={styles.button} onClick={handleSubmit}>
           Enviar y terminar
         </button>
@@ -206,32 +165,53 @@ const styles = {
     minHeight: '100vh',
     display:'flex', alignItems:'center', justifyContent:'center',
     backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
-    fontFamily:`'Poppins', sans-serif`
+    fontFamily:`'Poppins', sans-serif'`
   },
   card: {
-    background:'rgba(255,255,255,0.9)', padding:'40px',
+    background:'rgba(255,255,255,0.95)', padding: '40px',
     borderRadius:'12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
-    width:'90%', maxWidth:'1000px'
+    width:'95%', maxWidth:'1100px'
   },
-  riskRow: { display:'flex', alignItems:'flex-start', gap:'12px', margin:'16px 0' },
-  riskLabel: { flex:'1 1 200px', fontSize:'14px' },
-  inputGroup: { display:'flex', gap:'16px', alignItems:'center' },
-  label: { display:'flex', flexDirection:'column', fontSize:'12px' },
-  small: { width:'60px', padding:'4px' },
-  th: {
-    border:'1px solid #ccc', padding:'8px',
-    background:'#f5f5f5', textAlign:'left', whiteSpace:'nowrap'
+  thRisk: {
+    width: '220px',
+    padding: '8px',
+    border:'1px solid #ccc',
+    fontSize: '12px',
+    textAlign: 'left',
+    background:'#f0f0f0',
+    whiteSpace:'normal'
   },
   thRotated: {
-    border:'1px solid #ccc', padding:'8px', whiteSpace:'nowrap',
-    transform:'rotate(-45deg)', transformOrigin:'bottom left',
-    paddingBottom:'40px', verticalAlign:'bottom', fontSize:'12px'
+    border:'1px solid #ccc',
+    padding: '4px 8px',
+    fontSize: '10px',
+    whiteSpace:'nowrap',
+    transform:'rotate(-60deg)',
+    transformOrigin:'bottom center',
+    height:'100px',
+    verticalAlign:'bottom'
   },
-  td:    { border:'1px solid #ccc', padding:'8px', verticalAlign:'top', whiteSpace:'nowrap' },
-  tdCenter: { border:'1px solid #ccc', padding:'8px', textAlign:'center' },
+  tdRisk: {
+    border:'1px solid #ccc',
+    padding:'8px',
+    fontSize:'12px',
+    whiteSpace:'normal',
+    textAlign:'left'
+  },
+  tdCenter: {
+    border:'1px solid #ccc',
+    padding:'8px',
+    textAlign:'center'
+  },
   button: {
-    marginTop:'24px', padding:'12px 24px', background:'#007bff',
-    color:'#fff', border:'none', borderRadius:'6px', cursor:'pointer', fontSize:'16px'
+    marginTop:'24px',
+    padding:'12px 24px',
+    background:'#007bff',
+    color:'#fff',
+    border:'none',
+    borderRadius:'6px',
+    cursor:'pointer',
+    fontSize:'16px'
   }
 }
 
