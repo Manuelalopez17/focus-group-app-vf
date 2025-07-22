@@ -23,7 +23,23 @@ export default function Participante() {
     'Puesta en Marcha',
     'Disposición Final'
   ]
-  const riesgosPorEtapa = { /* igual que antes... */ }
+  const riesgosPorEtapa = {
+    Abastecimiento: [
+      'Demora en entrega de materiales por parte del proveedor',
+      'Recepción de materiales con especificaciones incorrectas',
+      'Falta de control de calidad en los insumos adquiridos',
+    ],
+    'Prefactibilidad y Factibilidad': [ /* ... */ ],
+    Planeación: [ /* ... */ ],
+    'Contratación y Adquisición': [ /* ... */ ],
+    Diseño: [ /* ... */ ],
+    Fabricación: [ /* ... */ ],
+    'Logística y Transporte': [ /* ... */ ],
+    Montaje: [ /* ... */ ],
+    Construcción: [ /* ... */ ],
+    'Puesta en Marcha': [ /* ... */ ],
+    'Disposición Final': [ /* ... */ ],
+  }
 
   const idx = sesionesOrden.indexOf(sesion)
   const etapa = idx >= 0 ? etapasProyecto[idx] : ''
@@ -78,7 +94,7 @@ export default function Participante() {
           importancia_impacto: impImp,
           importancia_frecuencia: impFrec,
           score_base: imp * frec,
-          score_final: imp * (impImp / 100) + frec * (impFrec / 100),
+          score_final: imp * (impImp/100) + frec * (impFrec/100)
         }
       } else {
         return { ...base, etapas_afectadas: resp.etapas_afectadas || [] }
@@ -94,6 +110,7 @@ export default function Participante() {
       alert('Error al guardar. Revisa consola.')
       return
     }
+
     alert('Respuestas enviadas exitosamente.')
     nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
   }
@@ -143,26 +160,32 @@ export default function Participante() {
         ) : (
           <>
             <p>Marca las etapas afectadas por cada riesgo</p>
-            <div style={styles.matrix}>
-              <div style={styles.headerRow}>
-                <div style={styles.headerFirst}>Riesgo</div>
-                {etapasProyecto.map(ep => (
-                  <div key={ep} style={styles.headerCell}>{ep}</div>
-                ))}
-              </div>
-              {riesgos.map((r, i) => (
-                <div key={i} style={styles.matrixRow}>
-                  <div style={styles.riskLabel}>{`r${i+1}. ${r}`}</div>
-                  {etapasProyecto.map(ep => (
-                    <div key={ep} style={styles.cell}>
-                      <input
-                        type="checkbox"
-                        onChange={() => handleCheckbox(i, ep)}
-                      />
-                    </div>
+            <div style={{ overflowX: 'auto', margin: '16px 0' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Riesgo</th>
+                    {etapasProyecto.map(ep => (
+                      <th key={ep} style={styles.thRotated}>{ep}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {riesgos.map((r, i) => (
+                    <tr key={i}>
+                      <td style={styles.td}>{`r${i+1}. ${r}`}</td>
+                      {etapasProyecto.map(ep => (
+                        <td key={ep} style={styles.tdCenter}>
+                          <input
+                            type="checkbox"
+                            onChange={() => handleCheckbox(i, ep)}
+                          />
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </div>
-              ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}
@@ -177,56 +200,48 @@ export default function Participante() {
 
 const styles = {
   container: {
-    minHeight: '100vh',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    backgroundImage: 'url("/proyecto.png")', backgroundSize: 'cover',
-    fontFamily: `'Poppins', sans-serif`
+    minHeight:'100vh',
+    display:'flex', alignItems:'center', justifyContent:'center',
+    backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
+    fontFamily:`'Poppins', sans-serif`
   },
   card: {
-    background: 'rgba(255,255,255,0.9)', padding: '40px',
-    borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    width: '90%', maxWidth: '1000px'
+    background:'rgba(255,255,255,0.9)', padding:'40px',
+    borderRadius:'12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
+    width:'90%', maxWidth:'1000px'
   },
   riskRow: {
-    display: 'flex', alignItems: 'flex-start', gap: '12px', margin: '16px 0'
+    display:'flex', alignItems:'flex-start', gap:'12px', margin:'16px 0'
   },
-  riskLabel: { flex: '1 1 200px', fontSize: '14px' },
-  inputGroup: { display: 'flex', gap: '16px', alignItems: 'center' },
-  label: { display: 'flex', flexDirection: 'column', fontSize: '12px' },
-  small: { width: '60px', padding: '4px' },
+  riskLabel: { flex:'1 1 200px', fontSize:'14px' },
+  inputGroup: { display:'flex', gap:'16px', alignItems:'center' },
+  label: { display:'flex', flexDirection:'column', fontSize:'12px' },
+  small: { width:'60px', padding:'4px' },
 
-  matrix: { overflowX: 'auto', margin: '24px 0' },
-  headerRow: {
-    display: 'grid',
-    gridTemplateColumns: '200px repeat(11,80px)',
-    alignItems: 'flex-end'
+  th: {
+    border:'1px solid #ccc', padding:'8px',
+    background:'#f5f5f5', textAlign:'left', whiteSpace:'nowrap'
   },
-  headerFirst: { padding: '8px', fontWeight: 600 },
-  headerCell: {
-    padding: '8px',
-    fontSize: '12px',
-    fontWeight: 600,
-    transform: 'rotate(-45deg)',
-    transformOrigin: 'bottom left',
-    whiteSpace: 'nowrap'
+  thRotated: {
+    border:'1px solid #ccc', padding:'8px', whiteSpace:'nowrap',
+    transform:'rotate(-45deg)', transformOrigin:'bottom left',
+    paddingBottom:'40px', verticalAlign:'bottom', fontSize:'12px'
   },
-  matrixRow: {
-    display: 'grid',
-    gridTemplateColumns: '200px repeat(11,80px)',
-    alignItems: 'center',
-    marginBottom: '8px'
+  td: {
+    border:'1px solid #ccc', padding:'8px', verticalAlign:'top',
+    whiteSpace:'nowrap'
   },
-  cell: { textAlign: 'center' },
+  tdCenter: { border:'1px solid #ccc', padding:'8px', textAlign:'center' },
 
   button: {
-    marginTop: '24px',
-    padding: '12px 24px',
-    background: '#007bff',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '16px'
+    marginTop:'24px',
+    padding:'12px 24px',
+    background:'#007bff',
+    color:'#fff',
+    border:'none',
+    borderRadius:'6px',
+    cursor:'pointer',
+    fontSize:'16px'
   }
 }
 
