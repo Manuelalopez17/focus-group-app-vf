@@ -1,97 +1,45 @@
-// src/Pages/Presentacion.jsx
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../supabaseClient'
 
 export default function Presentacion() {
-  const navigate = useNavigate();
-  const { search } = useLocation();
-  const sesion = new URLSearchParams(search).get('sesion') || '';
-
-  const [nombre, setNombre] = useState('');
-  const [empresa, setEmpresa] = useState('');
-  const [experiencia, setExperiencia] = useState('');
-  const [rol, setRol] = useState('');
-  const [email, setEmail] = useState('');
-
-  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.trim());
+  const navigate = useNavigate()
+  const [nombre, setNombre] = useState('')
+  const [empresa, setEmpresa] = useState('')
+  const [experiencia, setExperiencia] = useState('')
+  const [rol, setRol] = useState('')
+  const [email, setEmail] = useState('')
+  const canSubmit = [nombre, empresa, experiencia, rol, email].every(v => v.trim())
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
-
-    // Usamos upsert para ignorar duplicados en 'email'
+    if (!canSubmit) return
     const { error } = await supabase
       .from('experts')
-      .upsert(
-        [{
-          nombre,
-          empresa,
-          experiencia: Number(experiencia),
-          rol,
-          email,
-        }],
-        { onConflict: ['email'] }
-      );
-
+      .insert([{ nombre, empresa, experiencia: Number(experiencia), rol, email }])
     if (error) {
-      console.error('Error guardando experto:', error);
-      alert('Hubo un error al guardar. Revisa la consola.');
-      return;
+      console.error(error)
+      alert('Hubo un error al guardar. Revisa la consola.')
+      return
     }
-
-    localStorage.setItem('expertEmail', email);
-    navigate(`/login?sesion=${sesion}`, { replace: true });
-  };
+    navigate(`/home?email=${encodeURIComponent(email)}`, { replace: true })
+  }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h1>Presentación</h1>
         <p>Completa tus datos para iniciar el Focus Group</p>
-
-        <input
-          style={styles.input}
-          placeholder="Nombre completo"
-          value={nombre}
-          onChange={e => setNombre(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          placeholder="Empresa"
-          value={empresa}
-          onChange={e => setEmpresa(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Años de experiencia"
-          value={experiencia}
-          onChange={e => setExperiencia(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          placeholder="Rol"
-          value={rol}
-          onChange={e => setRol(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-
-        <button
-          style={{ ...styles.button, opacity: canSubmit ? 1 : 0.5 }}
-          disabled={!canSubmit}
-          onClick={handleSubmit}
-        >
+        <input style={styles.input} placeholder="Nombre completo" value={nombre} onChange={e => setNombre(e.target.value)} />
+        <input style={styles.input} placeholder="Empresa" value={empresa} onChange={e => setEmpresa(e.target.value)} />
+        <input style={styles.input} type="number" placeholder="Años de experiencia" value={experiencia} onChange={e => setExperiencia(e.target.value)} />
+        <input style={styles.input} placeholder="Rol" value={rol} onChange={e => setRol(e.target.value)} />
+        <input style={styles.input} type="email" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} />
+        <button style={{ ...styles.button, opacity: canSubmit ? 1 : 0.5 }} disabled={!canSubmit} onClick={handleSubmit}>
           Guardar y continuar
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 const styles = {
@@ -103,11 +51,6 @@ const styles = {
     background: 'rgba(255,255,255,0.9)', padding: '40px', borderRadius: '12px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px', textAlign: 'center'
   },
-  input: {
-    width: '100%', padding: '10px', margin: '8px 0', borderRadius: '6px', border: '1px solid #ccc'
-  },
-  button: {
-    marginTop: '16px', width: '100%', padding: '12px', background: '#007bff', color: 'white',
-    border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '16px'
-  }
-};
+  input: { width: '100%', padding: '10px', margin: '8px 0', borderRadius: '6px', border: '1px solid #ccc' },
+  button: { marginTop: '16px', width: '100%', padding: '12px', background: '#007bff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }
+}
