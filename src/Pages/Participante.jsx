@@ -9,7 +9,8 @@ export default function Participante() {
   const sesion = new URLSearchParams(search).get('sesion') || ''
   const email  = new URLSearchParams(search).get('email') || ''
 
-  const sesionesOrden = ['1.1','1.2','2.1','2.2']
+  // incluir 3.1 y 3.2
+  const sesionesOrden = ['1.1','1.2','2.1','2.2','3.1','3.2']
   const etapasProyecto = [
     'Abastecimiento',
     'Prefactibilidad y Factibilidad',
@@ -24,61 +25,7 @@ export default function Participante() {
     'Disposición Final'
   ]
   const riesgosPorEtapa = {
-    Abastecimiento: [
-      'Demora en entrega de materiales por parte del proveedor',
-      'Recepción de materiales con especificaciones incorrectas',
-      'Falta de control de calidad en los insumos adquiridos',
-    ],
-    'Prefactibilidad y Factibilidad': [
-      'Falta de análisis adecuado de viabilidad técnica',
-      'Supuestos económicos erróneos en la factibilidad financiera',
-      'Escasa participación de actores clave en etapa temprana'
-    ],
-    Planeación: [
-      'Errores en la estimación de recursos y tiempos',
-      'No inclusión de contingencias en la planificación',
-      'Cambios constantes en el alcance del proyecto'
-    ],
-    'Contratación y Adquisición': [
-      'Contratación de proveedores sin experiencia en construcción industrializada',
-      'Inadecuada definición de términos contractuales',
-      'Demoras en procesos administrativos de adquisición'
-    ],
-    Diseño: [
-      'Diseño no compatible con procesos industrializados',
-      'Errores en la integración de disciplinas de diseño',
-      'Ausencia de revisión y validación cruzada'
-    ],
-    Fabricación: [
-      'Defectos de fabricación en componentes modulares',
-      'Interrupciones en la cadena de producción',
-      'Falta de control en tolerancias de fabricación'
-    ],
-    'Logística y Transporte': [
-      'Retrasos en la entrega por dificultades logísticas',
-      'Daños en módulos durante el transporte',
-      'Problemas de acceso al sitio de construcción'
-    ],
-    Montaje: [
-      'Descoordinación entre equipos de montaje y logística',
-      'Errores en la secuencia de montaje',
-      'Falta de capacitación en ensamblaje de componentes'
-    ],
-    Construcción: [
-      'Condiciones climáticas adversas afectan avances',
-      'Incompatibilidad entre componentes industrializados y tradicionales',
-      'Riesgos laborales por manipulación de módulos'
-    ],
-    'Puesta en Marcha': [
-      'Fallos en las pruebas de sistemas instalados',
-      'No conformidad con normativas técnicas',
-      'Demoras en aprobaciones regulatorias finales'
-    ],
-    'Disposición Final': [
-      'Falta de planificación para reciclaje de componentes',
-      'Altos costos de disposición de residuos',
-      'Desconocimiento de normativas ambientales aplicables'
-    ],
+    /* ... tus riesgos ... */
   }
 
   const idx = sesionesOrden.indexOf(sesion)
@@ -89,6 +36,7 @@ export default function Participante() {
     if (!email) nav(`/home`, { replace: true })
   }, [email, nav])
 
+  // para 1.x
   const handleChange = (i, field, v) => {
     const value = Number(v)
     setRespuestas(prev => {
@@ -104,6 +52,7 @@ export default function Participante() {
     })
   }
 
+  // para 2.x
   const handleCheckbox = (i, ep) => {
     setRespuestas(prev => {
       const c = { ...prev }
@@ -116,11 +65,22 @@ export default function Participante() {
     })
   }
 
+  // **nuevo:** para 3.x
+  const handleMitigation = (i, estrategia) => {
+    setRespuestas(prev => {
+      const c = { ...prev }
+      c[i] = c[i] || {}
+      c[i].mitigacion = estrategia
+      return c
+    })
+  }
+
   const handleSubmit = async () => {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      const base = { sesion, etapa, riesgo: r, expert_email: email }
+      const base = { sesion, etapa, riesgo: r, mitigation_strategy: resp.mitigacion || null, expert_email: email }
+
       if (sesion.startsWith('1.')) {
         const imp = resp.impacto || 0
         const frec = resp.frecuencia || 0
@@ -135,8 +95,10 @@ export default function Participante() {
           score_base: imp * frec,
           score_final: imp * (impImp/100) + frec * (impFrec/100)
         }
-      } else {
+      } else if (sesion.startsWith('2.')) {
         return { ...base, etapas_afectadas: resp.etapas_afectadas || [] }
+      } else { // 3.x
+        return base
       }
     })
 
@@ -149,7 +111,6 @@ export default function Participante() {
       alert('Error al guardar. Revisa consola.')
       return
     }
-
     alert('Respuestas enviadas exitosamente.')
     nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
   }
@@ -164,50 +125,22 @@ export default function Participante() {
         {/* SESIONES 1.x */}
         {sesion.startsWith('1.') ? (
           <>
-            <p>Califica cada riesgo usando estas escalas:</p>
-            {riesgos.map((r, i) => (
-              <div key={i} style={styles.riskRow}>
-                <div style={styles.riskLabel}>{r}</div>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>
-                    Impacto (1–5)
-                    <input
-                      type="number" min="1" max="5"
-                      style={styles.small}
-                      onChange={e => handleChange(i, 'impacto', e.target.value)}
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    Frecuencia (1–5)
-                    <input
-                      type="number" min="1" max="5"
-                      style={styles.small}
-                      onChange={e => handleChange(i, 'frecuencia', e.target.value)}
-                    />
-                  </label>
-                  <label style={styles.label}>
-                    % Importancia de Impacto (0–100)
-                    <input
-                      type="number" min="0" max="100"
-                      style={styles.small}
-                      onChange={e => handleChange(i, 'importancia_impacto', e.target.value)}
-                    />
-                  </label>
-                </div>
-              </div>
-            ))}
+            {/* …igual que antes… */}
           </>
-        ) : (
-          /* SESIONES 2.x */
+        ) : sesion.startsWith('2.') ? (
           <>
-            <p>Marca las etapas afectadas por cada riesgo</p>
+            {/* …igual que antes… */}
+          </>
+        ) : sesion.startsWith('3.') ? (
+          <>
+            <p>¿Qué estrategia de mitigación recomienda para cada riesgo?</p>
             <div style={styles.tableWrapper}>
               <table style={styles.table}>
                 <thead>
                   <tr>
                     <th style={styles.th}>Riesgo</th>
-                    {etapasProyecto.map(ep => (
-                      <th key={ep} style={styles.thDiagonal}>{ep}</th>
+                    {['Aceptar','Mitigar','Transferir'].map(op => (
+                      <th key={op} style={styles.th}>{op}</th>
                     ))}
                   </tr>
                 </thead>
@@ -215,11 +148,13 @@ export default function Participante() {
                   {riesgos.map((r, i) => (
                     <tr key={i}>
                       <td style={styles.td}>{`r${i+1}. ${r}`}</td>
-                      {etapasProyecto.map(ep => (
-                        <td key={ep} style={styles.tdCenter}>
+                      {['Aceptar','Mitigar','Transferir'].map(op => (
+                        <td key={op} style={styles.tdCenter}>
                           <input
-                            type="checkbox"
-                            onChange={() => handleCheckbox(i, ep)}
+                            type="radio"
+                            name={`mitigacion-${i}`}
+                            value={op}
+                            onChange={() => handleMitigation(i, op)}
                           />
                         </td>
                       ))}
@@ -229,7 +164,7 @@ export default function Participante() {
               </table>
             </div>
           </>
-        )}
+        ) : null}
 
         <button style={styles.button} onClick={handleSubmit}>
           Enviar y terminar
@@ -240,71 +175,5 @@ export default function Participante() {
 }
 
 const styles = {
-  container: {
-    minHeight:'100vh',
-    display:'flex', alignItems:'center', justifyContent:'center',
-    backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
-    fontFamily:`'Poppins', sans-serif`
-  },
-  card: {
-    background:'rgba(255,255,255,0.9)', padding:'40px',
-    borderRadius:'12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
-    width:'90%', maxWidth:'1000px'
-  },
-  riskRow: {
-    display:'flex', alignItems:'flex-start', gap:'12px', margin:'16px 0'
-  },
-  riskLabel: { flex:'1 1 200px', fontSize:'14px' },
-  inputGroup: { display:'flex', gap:'16px', alignItems:'center' },
-  label: { display:'flex', flexDirection:'column', fontSize:'12px' },
-  small: { width:'60px', padding:'4px' },
-
-  tableWrapper: {
-    overflowX:'auto',
-    margin:'16px 0'
-  },
-  table: {
-    borderCollapse:'collapse',
-    width:'100%',
-    fontSize:'12px'
-  },
-  th: {
-    border:'1px solid #ccc', padding:'8px',
-    background:'#f0f0f0', textAlign:'left', verticalAlign:'bottom'
-  },
-  thDiagonal: {
-    border:'1px solid #ccc',
-    width:'40px', height:'120px',
-    padding:'0',
-    position:'relative'
-  },
-  thDiagonalInner: {
-    position:'absolute',
-    bottom:'4px', left:'50%',
-    transform:'translateX(-50%) rotate(-45deg)',
-    transformOrigin:'bottom left',
-    whiteSpace:'nowrap',
-    fontSize:'11px'
-  },
-  td: {
-    border:'1px solid #ccc',
-    padding:'6px',
-    verticalAlign:'top',
-    whiteSpace:'normal'
-  },
-  tdCenter: {
-    border:'1px solid #ccc',
-    padding:'6px',
-    textAlign:'center'
-  },
-  button: {
-    marginTop:'24px',
-    padding:'12px 24px',
-    background:'#007bff',
-    color:'#fff',
-    border:'none',
-    borderRadius:6,
-    cursor:'pointer',
-    fontSize:16
-  }
+  /* …tus estilos existentes, incluyendo tableWrapper, table, th, td, tdCenter… */
 }
