@@ -1,4 +1,3 @@
-// src/Pages/Participante.jsx
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
@@ -7,7 +6,7 @@ export default function Participante() {
   const nav = useNavigate()
   const { search } = useLocation()
   const sesion = new URLSearchParams(search).get('sesion') || ''
-  const email = new URLSearchParams(search).get('email') || ''
+  const email  = new URLSearchParams(search).get('email') || ''
 
   const sesionesOrden = ['1.1','1.2','2.1','2.2']
   const etapasProyecto = [
@@ -86,7 +85,7 @@ export default function Participante() {
   const [respuestas, setRespuestas] = useState({})
 
   useEffect(() => {
-    if (!email) nav('/home', { replace: true })
+    if (!email) nav(`/home`, { replace: true })
   }, [email, nav])
 
   const handleChange = (i, field, v) => {
@@ -120,7 +119,7 @@ export default function Participante() {
     const riesgos = riesgosPorEtapa[etapa] || []
     const inserts = riesgos.map((r, i) => {
       const resp = respuestas[i] || {}
-      const base = { sesion, etapa, riesgo: r }
+      const base = { sesion, etapa, riesgo: r, experto_email: email }
       if (sesion.startsWith('1.')) {
         const imp = resp.impacto || 0
         const frec = resp.frecuencia || 0
@@ -133,15 +132,10 @@ export default function Participante() {
           importancia_impacto: impImp,
           importancia_frecuencia: impFrec,
           score_base: imp * frec,
-          score_final: imp * (impImp/100) + frec * (impFrec/100),
-          experto_email: email
+          score_final: imp * (impImp/100) + frec * (impFrec/100)
         }
       } else {
-        return {
-          ...base,
-          etapas_afectadas: resp.etapas_afectadas || [],
-          expert_email: email
-        }
+        return { ...base, etapas_afectadas: resp.etapas_afectadas || [] }
       }
     })
 
@@ -151,9 +145,10 @@ export default function Participante() {
 
     if (error) {
       console.error(error)
-      alert(`Error al guardar: ${error.message}`)
+      alert('Error al guardar. Revisa consola.')
       return
     }
+
     alert('Respuestas enviadas exitosamente.')
     nav(`/home?email=${encodeURIComponent(email)}`, { replace: true })
   }
@@ -189,7 +184,7 @@ export default function Participante() {
                     />
                   </label>
                   <label style={styles.label}>
-                    % de importancia de impacto (0–100)
+                    % Importancia de Impacto (0–100)
                     <input
                       type="number" min="0" max="100"
                       style={styles.small}
@@ -209,14 +204,14 @@ export default function Participante() {
                   <tr>
                     <th style={styles.th}>Riesgo</th>
                     {etapasProyecto.map(ep => (
-                      <th key={ep} style={styles.thRotated}>{ep}</th>
+                      <th key={ep} style={styles.thVertical}>{ep}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {riesgos.map((r, i) => (
                     <tr key={i}>
-                      <td style={styles.td}>{r}</td>
+                      <td style={styles.td}>{`r${i+1}. ${r}`}</td>
                       {etapasProyecto.map(ep => (
                         <td key={ep} style={styles.tdCenter}>
                           <input
@@ -246,31 +241,20 @@ const styles = {
     minHeight:'100vh',
     display:'flex', alignItems:'center', justifyContent:'center',
     backgroundImage:'url("/proyecto.png")', backgroundSize:'cover',
-    fontFamily:`'Poppins', sans-serif`, padding: '20px'
+    fontFamily:`'Poppins', sans-serif`
   },
   card: {
-    background:'rgba(255,255,255,0.9)', padding:'30px',
+    background:'rgba(255,255,255,0.9)', padding:'40px',
     borderRadius:'12px', boxShadow:'0 4px 12px rgba(0,0,0,0.1)',
     width:'90%', maxWidth:'1000px'
   },
   riskRow: {
     display:'flex', alignItems:'flex-start', gap:'12px', margin:'16px 0'
   },
-  riskLabel: {
-    flex:'1 1 200px',
-    fontSize:'14px',
-    lineHeight:'1.3'
-  },
-  inputGroup: {
-    display:'flex', gap:'16px', alignItems:'flex-start'
-  },
-  label: {
-    display:'flex', flexDirection:'column',
-    fontSize:'12px', lineHeight:'1.2'
-  },
-  small: {
-    width:'50px', padding:'4px', marginTop:'4px'
-  },
+  riskLabel: { flex:'1 1 200px', fontSize:'14px' },
+  inputGroup: { display:'flex', gap:'16px', alignItems:'center' },
+  label: { display:'flex', flexDirection:'column', fontSize:'12px' },
+  small: { width:'60px', padding:'4px' },
   table: {
     width:'100%',
     borderCollapse:'collapse',
@@ -280,22 +264,36 @@ const styles = {
     border:'1px solid #ccc', padding:'8px',
     background:'#f0f0f0', textAlign:'left', whiteSpace:'nowrap'
   },
-  thRotated: {
-    border:'1px solid #ccc', padding:'8px', whiteSpace:'nowrap',
-    transform:'rotate(-45deg)', transformOrigin:'center center',
-    paddingBottom:'40px', verticalAlign:'bottom'
+  thVertical: {
+    border:'1px solid #ccc',
+    padding:'6px',
+    width:'40px',
+    writingMode:'vertical-rl',
+    textOrientation:'upright',
+    textAlign:'center',
+    background:'#f0f0f0',
+    fontSize:'11px',
+    whiteSpace:'normal'
   },
   td: {
-    border:'1px solid #ccc', padding:'6px',
-    verticalAlign:'top', whiteSpace:'normal'
+    border:'1px solid #ccc',
+    padding:'6px',
+    verticalAlign:'top',
+    whiteSpace:'normal'
   },
   tdCenter: {
-    border:'1px solid #ccc', padding:'6px',
+    border:'1px solid #ccc',
+    padding:'6px',
     textAlign:'center'
   },
   button: {
-    marginTop:'24px', padding:'12px 24px',
-    background:'#007bff', color:'#fff', border:'none',
-    borderRadius:'6px', cursor:'pointer', fontSize:'14px'
+    marginTop:'24px',
+    padding:'12px 24px',
+    background:'#007bff',
+    color:'#fff',
+    border:'none',
+    borderRadius:6,
+    cursor:'pointer',
+    fontSize:16
   }
 }
