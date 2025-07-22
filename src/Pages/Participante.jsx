@@ -140,7 +140,7 @@ export default function Participante() {
         return {
           ...base,
           etapas_afectadas: resp.etapas_afectadas || [],
-          experto_email: email
+          expert_email: email
         }
       }
     })
