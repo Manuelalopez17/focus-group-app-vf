@@ -28,7 +28,7 @@ export default function Presentacion() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1>Presentación</h1>
-        <p>Completa tus datos para iniciar el Focus Group</p>
+        <p>Complete sus datos para iniciar el Focus Group</p>
         <input style={styles.input} placeholder="Nombre completo" value={nombre} onChange={e => setNombre(e.target.value)} />
         <input style={styles.input} placeholder="Empresa" value={empresa} onChange={e => setEmpresa(e.target.value)} />
         <input style={styles.input} type="number" placeholder="Años de experiencia" value={experiencia} onChange={e => setExperiencia(e.target.value)} />

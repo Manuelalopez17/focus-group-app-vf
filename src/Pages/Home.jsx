@@ -32,7 +32,7 @@ export default function Home() {
 
   const startSession = sesion => {
     if (!etapa) {
-      alert('Por favor selecciona tu área de experiencia')
+      alert('Por favor seleccione su área de experiencia')
       return
     }
     navigate(
@@ -47,13 +47,13 @@ export default function Home() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h2>Bienvenido, <strong>{email}</strong></h2>
-        <p>Selecciona tu área de experiencia:</p>
+        <p>Seleccione su área de experiencia:</p>
         <select
           style={styles.input}
           value={etapa}
           onChange={e => setEtapa(e.target.value)}
         >
-          <option value="">-- Selecciona etapa --</option>
+          <option value="">-- Seleccione etapa --</option>
           {etapasProyecto.map(ep => (
             <option key={ep} value={ep}>{ep}</option>
           ))}

@@ -38,7 +38,7 @@ export default function Login() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1>Ingreso</h1>
-        <p>Ingresa tu correo para continuar</p>
+        <p>Ingrese su correo para continuar</p>
         <input
           style={styles.input}
           type="email"

@@ -181,7 +181,7 @@ export default function Participante() {
         {/* SESIÓN 1.x */}
         {sesion.startsWith('1.') && (
           <>
-            <p>Califica cada riesgo usando estas escalas:</p>
+            <p>Califique cada riesgo usando estas escalas:</p>
             {riesgos.map((r, i) => (
               <div key={i} style={styles.riskRow}>
                 <div style={styles.riskLabel}>{r}</div>
@@ -210,7 +210,7 @@ export default function Participante() {
         {/* SESIÓN 2.x */}
         {sesion.startsWith('2.') && (
           <>
-            <p>Marca las etapas afectadas por cada riesgo</p>
+            <p>Marque las etapas afectadas por cada riesgo</p>
             <div style={styles.tableWrapper}>
               <table style={styles.table}>
                 <thead>
@@ -242,7 +242,7 @@ export default function Participante() {
         {/* SESIÓN 3.x */}
         {sesion.startsWith('3.') && (
           <>
-            <p>¿Qué estrategia de mitigación recomiendas?</p>
+            <p>¿Qué estrategia de mitigación recomienda?</p>
             <div style={styles.tableWrapper}>
               <table style={styles.table}>
                 <thead>
