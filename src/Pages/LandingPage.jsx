@@ -19,10 +19,10 @@ export default function LandingPage() {
         backgroundPosition: 'center',
       }}
     >
-      {/* Caja semitransparente para mejorar legibilidad */}
+      {/* Recuadro semitransparente */}
       <div
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          backgroundColor: 'rgba(0,0,0,0.6)',
           padding: '2rem 3rem',
           borderRadius: '1rem',
           textAlign: 'center',
@@ -31,19 +31,23 @@ export default function LandingPage() {
       >
         <h1
           style={{
-            fontSize: '3rem',
-            fontWeight: 'bold',
+            fontSize: '4rem',        // Más grande
+            fontWeight: 700,
             color: '#fff',
             marginBottom: '1rem',
+            lineHeight: 1.2,
+            textShadow: '4px 4px 8px rgba(0,0,0,0.8)'  // Sombreado
           }}
         >
           Focus Group – Proyecto Riesgos
         </h1>
         <p
           style={{
-            fontSize: '1.25rem',
+            fontSize: '1.5rem',    // Texto más grande
             color: 'rgba(255,255,255,0.9)',
             marginBottom: '2rem',
+            fontWeight: 400,
+            textShadow: '2px 2px 4px rgba(0,0,0,0.7)'  // Sombreado ligero
           }}
         >
           {dateString}
@@ -59,6 +63,7 @@ export default function LandingPage() {
               borderRadius: '0.5rem',
               cursor: 'pointer',
               transition: 'background-color 0.2s',
+              fontWeight: 500,
             }}
             onMouseOver={e => e.currentTarget.style.backgroundColor = '#1C86EE'}
             onMouseOut={e => e.currentTarget.style.backgroundColor = '#1E90FF'}
